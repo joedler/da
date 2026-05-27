@@ -120,3 +120,7 @@ GitHub Pages 設定：
 目前 LIFF URL：
 
 - `https://liff.line.me/2010211676-aN5CpjP8`
+
+目前 GAS Web App URL：
+
+- `https://script.google.com/macros/s/AKfycbzuue-f_lfOVxkwWtW9dCSZkXPccSH_OdcYKVXbXPiFQijGQkB9n-9te6uVkhXSpzxQ/exec`
