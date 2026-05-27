@@ -124,3 +124,8 @@ GitHub Pages 設定：
 目前 GAS Web App URL：
 
 - `https://script.google.com/macros/s/AKfycbzuue-f_lfOVxkwWtW9dCSZkXPccSH_OdcYKVXbXPiFQijGQkB9n-9te6uVkhXSpzxQ/exec`
+
+客戶測試版文件：
+
+- `客戶測試版交付清單.md`
+- `客戶測試案例表.md`
