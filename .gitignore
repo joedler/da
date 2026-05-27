@@ -1,0 +1,15 @@
+node_modules/
+.tmp/
+gas/build/
+backups/
+outputs/
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.zip
+gas/.clasp.json
+scripts/apply_manual_corrections.mjs
+專案需求草稿.md
+資料檢查紀錄.md
+下一步_GAS部署教學.md
