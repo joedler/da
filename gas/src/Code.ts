@@ -54,6 +54,21 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
       return json_(getMyInfo_(lineUserId));
     }
 
+    if (action === "verifyAndBind") {
+      return json_(verifyAndBind_({
+        name: getParam_(e, "name"),
+        studentId: getParam_(e, "studentId"),
+        phoneLast3: getParam_(e, "phoneLast3"),
+        lineUserId: getParam_(e, "lineUserId"),
+      }));
+    }
+
+    if (action === "unbind") {
+      return json_(unbind_({
+        lineUserId: getParam_(e, "lineUserId"),
+      }));
+    }
+
     return json_({ ok: false, error: "UNKNOWN_ACTION" });
   } catch (error) {
     return jsonError_(error);

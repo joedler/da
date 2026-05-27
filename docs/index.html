@@ -6,29 +6,315 @@
     <title>畢旅查詢系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="./config.js"></script>
   </head>
   <body class="min-h-screen bg-slate-50 text-slate-900">
-    <main class="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-5 py-10" x-data>
-      <section class="space-y-5">
+    <main
+      class="mx-auto min-h-screen max-w-xl px-5 py-6"
+      x-data="tripApp()"
+      x-init="init()"
+    >
+      <section class="space-y-5 pb-8">
         <div>
           <p class="text-sm font-medium text-teal-700">Graduation Trip</p>
-          <h1 class="mt-2 text-3xl font-bold">畢旅查詢系統</h1>
+          <h1 class="mt-2 text-3xl font-bold" x-text="config.activityName"></h1>
           <p class="mt-3 text-base leading-7 text-slate-600">
             本系統提供車次、桌號、房號、房間編組、同房人員與素食註記查詢。
           </p>
         </div>
 
-        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <p class="font-semibold">目前狀態</p>
+        <div
+          class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+          x-show="state === 'loading'"
+        >
+          <p class="font-semibold">讀取中</p>
           <p class="mt-2 text-sm leading-6 text-slate-600">
-            GitHub Pages 前端已建立。下一步會接上 LIFF SDK 與 GAS API。
+            正在確認 LINE 身分與綁定狀態。
           </p>
         </div>
+
+        <div
+          class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-900"
+          x-show="message"
+          x-text="message"
+        ></div>
+
+        <section
+          class="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+          x-show="state === 'unbound'"
+        >
+          <div>
+            <h2 class="text-xl font-bold">首次驗證</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              學生請輸入姓名與學號；老師請輸入姓名與手機末三碼。驗證成功後會綁定目前 LINE 帳號。
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 rounded-md bg-slate-100 p-1">
+            <button
+              type="button"
+              class="rounded px-3 py-2 text-sm font-semibold"
+              :class="form.type === 'student' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
+              @click="form.type = 'student'"
+            >
+              學生
+            </button>
+            <button
+              type="button"
+              class="rounded px-3 py-2 text-sm font-semibold"
+              :class="form.type === 'teacher' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
+              @click="form.type = 'teacher'"
+            >
+              老師
+            </button>
+          </div>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">姓名</span>
+            <input
+              class="mt-1 w-full rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              x-model.trim="form.name"
+              autocomplete="name"
+              placeholder="請輸入姓名"
+            >
+          </label>
+
+          <label class="block" x-show="form.type === 'student'">
+            <span class="text-sm font-medium text-slate-700">學號</span>
+            <input
+              class="mt-1 w-full rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              x-model.trim="form.studentId"
+              inputmode="numeric"
+              placeholder="請輸入學號"
+            >
+          </label>
+
+          <label class="block" x-show="form.type === 'teacher'">
+            <span class="text-sm font-medium text-slate-700">手機末三碼</span>
+            <input
+              class="mt-1 w-full rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              x-model.trim="form.phoneLast3"
+              inputmode="numeric"
+              maxlength="3"
+              placeholder="例如 123"
+            >
+          </label>
+
+          <button
+            type="button"
+            class="w-full rounded-md bg-teal-700 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            :disabled="submitting"
+            @click="verifyAndBind()"
+          >
+            <span x-show="!submitting">驗證並綁定</span>
+            <span x-show="submitting">處理中...</span>
+          </button>
+        </section>
+
+        <section
+          class="space-y-4"
+          x-show="state === 'bound' && profile"
+        >
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-sm text-slate-500">已綁定</p>
+            <h2 class="mt-1 text-2xl font-bold" x-text="profile.name"></h2>
+            <p class="mt-1 text-sm text-slate-600" x-text="profile.roleClass"></p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">我的車次</p>
+              <p class="mt-1 text-xl font-bold" x-text="profile.bus || '尚未公告'"></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">我的桌號</p>
+              <p class="mt-1 text-xl font-bold" x-text="profile.tableNo || '尚未公告'"></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">我的房號</p>
+              <p class="mt-1 text-xl font-bold" x-text="profile.roomNo || '尚未公告'"></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">房間編組</p>
+              <p class="mt-1 text-xl font-bold" x-text="profile.roomGroup || '尚未公告'"></p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-sm text-slate-500">我的同房人員</p>
+            <p class="mt-2 leading-7" x-text="profile.roomMembers || '尚未公告'"></p>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-sm text-slate-500">素食註記</p>
+            <p class="mt-2 leading-7" x-text="profile.vegetarian || '無'"></p>
+          </div>
+
+          <button
+            type="button"
+            class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700"
+            :disabled="submitting"
+            @click="unbind()"
+          >
+            解除綁定
+          </button>
+        </section>
 
         <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
           本系統不是即時客服。臨時狀況、資料異動或個人問題，請聯絡班導、隨隊老師或旅行社窗口。
         </div>
       </section>
     </main>
+
+    <script>
+      function tripApp() {
+        return {
+          config: window.APP_CONFIG || {},
+          state: "loading",
+          message: "",
+          submitting: false,
+          lineUserId: "",
+          profile: null,
+          form: {
+            type: "student",
+            name: "",
+            studentId: "",
+            phoneLast3: "",
+          },
+
+          async init() {
+            try {
+              this.ensureConfig();
+              await this.initLiff();
+              await this.loadMe();
+            } catch (error) {
+              this.state = "unbound";
+              this.message = error.message || "初始化失敗，請稍後再試。";
+            }
+          },
+
+          ensureConfig() {
+            if (!this.config.gasWebAppUrl) {
+              throw new Error("缺少 GAS API 設定。");
+            }
+            if (!this.config.liffId) {
+              throw new Error("缺少 LIFF ID 設定。");
+            }
+          },
+
+          async initLiff() {
+            await liff.init({ liffId: this.config.liffId });
+            if (!liff.isLoggedIn()) {
+              liff.login();
+              return;
+            }
+            const profile = await liff.getProfile();
+            this.lineUserId = profile.userId;
+          },
+
+          async loadMe() {
+            const result = await this.callApi({
+              action: "me",
+              lineUserId: this.lineUserId,
+            });
+
+            if (result.ok) {
+              this.profile = result.profile;
+              this.state = "bound";
+              this.message = "";
+              return;
+            }
+
+            if (result.error === "NOT_BOUND") {
+              this.state = "unbound";
+              this.message = "";
+              return;
+            }
+
+            throw new Error(result.message || "查詢綁定狀態失敗。");
+          },
+
+          async verifyAndBind() {
+            this.message = "";
+            if (!this.form.name) {
+              this.message = "請輸入姓名。";
+              return;
+            }
+            if (this.form.type === "student" && !this.form.studentId) {
+              this.message = "請輸入學號。";
+              return;
+            }
+            if (this.form.type === "teacher" && !this.form.phoneLast3) {
+              this.message = "請輸入手機末三碼。";
+              return;
+            }
+
+            this.submitting = true;
+            try {
+              const payload = {
+                action: "verifyAndBind",
+                name: this.form.name,
+                lineUserId: this.lineUserId,
+              };
+              if (this.form.type === "student") {
+                payload.studentId = this.form.studentId;
+              } else {
+                payload.phoneLast3 = this.form.phoneLast3;
+              }
+
+              const result = await this.callApi(payload);
+              if (!result.ok) {
+                throw new Error(result.message || "驗證失敗。");
+              }
+
+              this.profile = result.profile;
+              this.state = "bound";
+              this.message = "";
+            } catch (error) {
+              this.message = error.message || "驗證失敗，請稍後再試。";
+            } finally {
+              this.submitting = false;
+            }
+          },
+
+          async unbind() {
+            this.submitting = true;
+            this.message = "";
+            try {
+              const result = await this.callApi({
+                action: "unbind",
+                lineUserId: this.lineUserId,
+              });
+              if (!result.ok) {
+                throw new Error(result.message || "解除綁定失敗。");
+              }
+              this.profile = null;
+              this.state = "unbound";
+              this.message = "已解除綁定，可重新驗證。";
+            } catch (error) {
+              this.message = error.message || "解除綁定失敗。";
+            } finally {
+              this.submitting = false;
+            }
+          },
+
+          async callApi(params) {
+            const url = new URL(this.config.gasWebAppUrl);
+            Object.entries(params).forEach(([key, value]) => {
+              if (value !== undefined && value !== null && value !== "") {
+                url.searchParams.set(key, value);
+              }
+            });
+
+            const response = await fetch(url.toString(), {
+              method: "GET",
+              redirect: "follow",
+            });
+            return response.json();
+          },
+        };
+      }
+    </script>
   </body>
 </html>
