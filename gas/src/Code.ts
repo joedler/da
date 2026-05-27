@@ -101,7 +101,11 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
   try {
     const body = parseBody_(e);
     if (isLineWebhook_(body)) {
-      handleLineWebhook_(body);
+      try {
+        handleLineWebhook_(body);
+      } catch (error) {
+        Logger.log(`LINE webhook error: ${error instanceof Error ? error.message : String(error)}`);
+      }
       return;
     }
 
@@ -127,7 +131,9 @@ function isLineWebhook_(body: ApiPayload): boolean {
 
 function handleLineWebhook_(body: ApiPayload): void {
   const events = Array.isArray(body.events) ? body.events as LineWebhookEvent[] : [];
+  Logger.log(`LINE webhook events: ${events.length}`);
   events.forEach((event) => {
+    Logger.log(`LINE webhook event type: ${event.type || ""}`);
     if (!event.replyToken) return;
 
     if (event.type === "follow") {
@@ -136,21 +142,13 @@ function handleLineWebhook_(body: ApiPayload): void {
     }
 
     if (event.message?.type !== "text") return;
-    const text = normalize_(event.message.text);
-    if (!text || shouldReplyWithLiff_(text)) {
-      replyText_(event.replyToken, buildBotIntroMessage_());
-    }
+    replyText_(event.replyToken, buildBotIntroMessage_());
   });
-}
-
-function shouldReplyWithLiff_(text: string): boolean {
-  const normalized = text.toLowerCase();
-  return ["查詢", "畢旅查詢", "行程", "領隊", "help", "hi", "hello"].some((keyword) => normalized.includes(keyword));
 }
 
 function buildBotIntroMessage_(): string {
   const liffUrl = getProperty_("LIFF_URL", "");
-  const activityName = getAppSettings_().activityName;
+  const activityName = getProperty_("ACTIVITY_NAME", "本次團體旅遊");
   return [
     `您好，歡迎使用團旅小幫手。`,
     ``,
@@ -164,9 +162,12 @@ function buildBotIntroMessage_(): string {
 
 function replyText_(replyToken: string, text: string): void {
   const channelAccessToken = getProperty_("LINE_CHANNEL_ACCESS_TOKEN", "");
-  if (!channelAccessToken) return;
+  if (!channelAccessToken) {
+    Logger.log("LINE reply skipped: LINE_CHANNEL_ACCESS_TOKEN is empty.");
+    return;
+  }
 
-  UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", {
+  const response = UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", {
     method: "post",
     contentType: "application/json",
     headers: {
@@ -178,6 +179,8 @@ function replyText_(replyToken: string, text: string): void {
     }),
     muteHttpExceptions: true,
   });
+  Logger.log(`LINE reply status: ${response.getResponseCode()}`);
+  Logger.log(`LINE reply body: ${response.getContentText()}`);
 }
 
 function testHealth(): void {

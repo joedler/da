@@ -123,7 +123,7 @@ GitHub Pages 設定：
 
 目前 GAS Web App URL：
 
-- `https://script.google.com/macros/s/AKfycbw73Uf4VxqJlJ_uAh7rAzWp8eWMHwIbCprBaysFxqSVQ4oCN1_Kf8BmtcrDARVBA8kN/exec`
+- `https://script.google.com/macros/s/AKfycbxOGsndorYIpwz2HDjaSxvV1Rslk1nL8EO8VESeLGluAanvFM9aCbArK7Lp3HSFDfvR/exec`
 
 前端會從 GAS `?action=settings` 讀取：
 
