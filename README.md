@@ -112,3 +112,11 @@ GitHub Pages 設定：
 
 - `docs/index.html`
 - `GitHubPages設定教學.md`
+
+目前前端網址：
+
+- `https://joedler.github.io/da/`
+
+目前 LIFF URL：
+
+- `https://liff.line.me/2010211676-aN5CpjP8`
