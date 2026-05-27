@@ -30,6 +30,12 @@ interface ApiResponse {
   [key: string]: unknown;
 }
 
+interface AppSettings {
+  activityName: string;
+  tableMealLabel: string;
+  roomNumberStatus: string;
+}
+
 const CONFIG = {
   DEFAULT_SPREADSHEET_ID: "SET_IN_SCRIPT_PROPERTIES",
   DEFAULT_PEOPLE_SHEET: "people",
@@ -52,6 +58,13 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
     if (action === "me") {
       const lineUserId = getParam_(e, "lineUserId");
       return json_(getMyInfo_(lineUserId));
+    }
+
+    if (action === "settings") {
+      return json_({
+        ok: true,
+        settings: getAppSettings_(),
+      });
     }
 
     if (action === "verifyAndBind") {
@@ -124,6 +137,13 @@ function testReadPeople(): void {
     ok: true,
     rows: table.rows.length,
     firstName: table.rows.length ? read_(table.rows[0], table.header, "姓名") : "",
+  }, null, 2));
+}
+
+function testReadSettings(): void {
+  Logger.log(JSON.stringify({
+    ok: true,
+    settings: getAppSettings_(),
   }, null, 2));
 }
 
@@ -281,6 +301,30 @@ function getPeopleSheet_(): GoogleAppsScript.Spreadsheet.Sheet {
   const sheet = spreadsheet.getSheetByName(peopleSheetName);
   if (!sheet) throw new Error(`找不到工作表：${peopleSheetName}`);
   return sheet;
+}
+
+function getSettingsSheet_(): GoogleAppsScript.Spreadsheet.Sheet {
+  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const settingsSheetName = getProperty_("SETTINGS_SHEET", CONFIG.DEFAULT_SETTINGS_SHEET);
+  const sheet = spreadsheet.getSheetByName(settingsSheetName);
+  if (!sheet) throw new Error(`找不到工作表：${settingsSheetName}`);
+  return sheet;
+}
+
+function getAppSettings_(): AppSettings {
+  const values = getSettingsSheet_().getDataRange().getValues();
+  const settings: Record<string, string> = {};
+
+  values.slice(1).forEach((row) => {
+    const key = normalize_(row[0]);
+    if (key) settings[key] = normalize_(row[1]);
+  });
+
+  return {
+    activityName: settings.activity_name || "畢旅查詢系統",
+    tableMealLabel: settings.table_meal_label || "指定餐次桌號",
+    roomNumberStatus: settings.room_number_status || "尚未公告",
+  };
 }
 
 function readTable_(sheet: GoogleAppsScript.Spreadsheet.Sheet): PeopleTable {

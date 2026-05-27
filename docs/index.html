@@ -128,7 +128,7 @@
               <p class="mt-1 text-xl font-bold" x-text="profile.bus || '尚未公告'"></p>
             </div>
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-sm text-slate-500">我的桌號</p>
+              <p class="text-sm text-slate-500" x-text="settings.tableMealLabel || '我的桌號'"></p>
               <p class="mt-1 text-xl font-bold" x-text="profile.tableNo || '尚未公告'"></p>
             </div>
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -176,6 +176,11 @@
           submitting: false,
           lineUserId: "",
           profile: null,
+          settings: {
+            activityName: "",
+            tableMealLabel: "我的桌號",
+            roomNumberStatus: "尚未公告",
+          },
           form: {
             type: "student",
             name: "",
@@ -186,11 +191,21 @@
           async init() {
             try {
               this.ensureConfig();
+              await this.loadSettings();
               await this.initLiff();
               await this.loadMe();
             } catch (error) {
               this.state = "unbound";
               this.message = error.message || "初始化失敗，請稍後再試。";
+            }
+          },
+
+          async loadSettings() {
+            const result = await this.callApi({ action: "settings" });
+            if (result.ok && result.settings) {
+              this.settings = result.settings;
+              this.config.activityName = result.settings.activityName || this.config.activityName;
+              document.title = this.config.activityName;
             }
           },
 

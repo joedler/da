@@ -125,6 +125,14 @@ GitHub Pages 設定：
 
 - `https://script.google.com/macros/s/AKfycbzuue-f_lfOVxkwWtW9dCSZkXPccSH_OdcYKVXbXPiFQijGQkB9n-9te6uVkhXSpzxQ/exec`
 
+前端會從 GAS `?action=settings` 讀取：
+
+- `activity_name`
+- `table_meal_label`
+- `room_number_status`
+
+因此客戶在 Google Sheets 的 `settings` 工作表更新活動名稱後，前端會自動顯示最新名稱。
+
 客戶測試版文件：
 
 - `客戶測試版交付清單.md`

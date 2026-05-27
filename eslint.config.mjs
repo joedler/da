@@ -15,7 +15,7 @@ export default [
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-unused-vars": ["warn", {
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^(doGet|doPost|testHealth|setupProjectProperties|testReadPeople|testVerifyAndBindStudent|testUnbindTestUser)$"
+        "varsIgnorePattern": "^(doGet|doPost|testHealth|setupProjectProperties|testReadPeople|testReadSettings|testVerifyAndBindStudent|testUnbindTestUser)$"
       }],
       "no-undef": "off"
     }
