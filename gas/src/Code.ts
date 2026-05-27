@@ -36,6 +36,15 @@ interface AppSettings {
   roomNumberStatus: string;
 }
 
+interface LineWebhookEvent {
+  type?: string;
+  replyToken?: string;
+  message?: {
+    type?: string;
+    text?: string;
+  };
+}
+
 const CONFIG = {
   DEFAULT_SPREADSHEET_ID: "SET_IN_SCRIPT_PROPERTIES",
   DEFAULT_PEOPLE_SHEET: "people",
@@ -88,9 +97,14 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
   }
 }
 
-function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
+function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput | void {
   try {
     const body = parseBody_(e);
+    if (isLineWebhook_(body)) {
+      handleLineWebhook_(body);
+      return;
+    }
+
     const action = normalize_(body.action);
 
     if (action === "verifyAndBind") {
@@ -105,6 +119,65 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
   } catch (error) {
     return jsonError_(error);
   }
+}
+
+function isLineWebhook_(body: ApiPayload): boolean {
+  return Array.isArray(body.events);
+}
+
+function handleLineWebhook_(body: ApiPayload): void {
+  const events = Array.isArray(body.events) ? body.events as LineWebhookEvent[] : [];
+  events.forEach((event) => {
+    if (!event.replyToken) return;
+
+    if (event.type === "follow") {
+      replyText_(event.replyToken, buildBotIntroMessage_());
+      return;
+    }
+
+    if (event.message?.type !== "text") return;
+    const text = normalize_(event.message.text);
+    if (!text || shouldReplyWithLiff_(text)) {
+      replyText_(event.replyToken, buildBotIntroMessage_());
+    }
+  });
+}
+
+function shouldReplyWithLiff_(text: string): boolean {
+  const normalized = text.toLowerCase();
+  return ["查詢", "畢旅查詢", "行程", "領隊", "help", "hi", "hello"].some((keyword) => normalized.includes(keyword));
+}
+
+function buildBotIntroMessage_(): string {
+  const liffUrl = getProperty_("LIFF_URL", "");
+  const activityName = getAppSettings_().activityName;
+  return [
+    `您好，歡迎使用團旅小幫手。`,
+    ``,
+    `本帳號提供 ${activityName} 資訊查詢。`,
+    `請開啟以下連結查詢車次、桌號、房間編組、同房人員與素食註記：`,
+    liffUrl || "請點選下方圖文選單進入查詢頁。",
+    ``,
+    `本帳號為資訊查詢工具，若資料有誤或需人工協助，請聯繫領隊或承辦人員。`,
+  ].join("\n");
+}
+
+function replyText_(replyToken: string, text: string): void {
+  const channelAccessToken = getProperty_("LINE_CHANNEL_ACCESS_TOKEN", "");
+  if (!channelAccessToken) return;
+
+  UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "post",
+    contentType: "application/json",
+    headers: {
+      Authorization: `Bearer ${channelAccessToken}`,
+    },
+    payload: JSON.stringify({
+      replyToken,
+      messages: [{ type: "text", text }],
+    }),
+    muteHttpExceptions: true,
+  });
 }
 
 function testHealth(): void {
