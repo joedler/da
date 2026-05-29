@@ -113,6 +113,172 @@
         </section>
 
         <section
+          class="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+          x-show="state === 'adminAuth'"
+        >
+          <div>
+            <h2 class="text-xl font-bold">領隊總覽驗證</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600">
+              此頁面限領隊或管理者使用。請輸入授權名單中的姓名與手機末三碼。
+            </p>
+          </div>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">姓名</span>
+            <input
+              class="mt-1 w-full rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              x-model.trim="adminForm.name"
+              placeholder="請輸入姓名"
+            >
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">手機末三碼</span>
+            <input
+              class="mt-1 w-full rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              x-model.trim="adminForm.phoneLast3"
+              inputmode="numeric"
+              maxlength="3"
+              placeholder="例如 123"
+            >
+          </label>
+
+          <button
+            type="button"
+            class="w-full rounded-md bg-teal-700 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            :disabled="submitting"
+            @click="verifyAdmin()"
+          >
+            <span x-show="!submitting">驗證並開啟總覽</span>
+            <span x-show="submitting">處理中...</span>
+          </button>
+        </section>
+
+        <section
+          class="space-y-4"
+          x-show="state === 'overview' && overview"
+        >
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p class="text-sm text-slate-500">領隊總覽</p>
+            <h2 class="mt-1 text-2xl font-bold" x-text="overview?.admin?.name || '管理者'"></h2>
+            <p class="mt-1 text-sm text-slate-600" x-text="overview?.admin?.role || '已授權'"></p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <p class="text-sm text-slate-500">總人數</p>
+              <p class="mt-1 text-2xl font-bold" x-text="overview?.stats?.total || 0"></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <p class="text-sm text-slate-500">素食</p>
+              <p class="mt-1 text-2xl font-bold" x-text="overview?.stats?.vegetarian || 0"></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <p class="text-sm text-slate-500">學生 / 老師</p>
+              <p class="mt-1 text-lg font-bold" x-text="`${overview?.stats?.students || 0} / ${overview?.stats?.teachers || 0}`"></p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <p class="text-sm text-slate-500">未綁定</p>
+              <p class="mt-1 text-2xl font-bold" x-text="overview?.stats?.unbound || 0"></p>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">搜尋姓名 / 班級 / 車次 / 房號 / 桌號</span>
+              <input
+                class="mt-1 w-full rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                x-model.trim="overviewSearch"
+                placeholder="輸入關鍵字"
+              >
+            </label>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 rounded-md bg-slate-100 p-1">
+            <template x-for="tab in overviewTabs" :key="tab.key">
+              <button
+                type="button"
+                class="rounded px-2 py-2 text-sm font-semibold"
+                :class="overviewTab === tab.key ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
+                @click="overviewTab = tab.key"
+                x-text="tab.label"
+              ></button>
+            </template>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" x-show="overviewTab === 'bus'">
+            <h3 class="text-xl font-bold">分車名單</h3>
+            <template x-for="bus in overviewBuses()" :key="bus">
+              <section class="mt-4 border-t border-slate-100 pt-4">
+                <h4 class="font-bold text-teal-800" x-text="`${bus}｜${peopleByBus(bus).length} 人`"></h4>
+                <div class="mt-3 space-y-2">
+                  <template x-for="person in peopleByBus(bus)" :key="`${bus}-${person.name}-${person.roleClass}`">
+                    <div class="rounded-md bg-slate-50 p-3 text-sm leading-6">
+                      <p><strong x-text="person.name"></strong> <span x-text="person.roleClass"></span></p>
+                      <p class="text-slate-600" x-text="personSummary(person)"></p>
+                    </div>
+                  </template>
+                </div>
+              </section>
+            </template>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" x-show="overviewTab === 'class'">
+            <h3 class="text-xl font-bold">班級名單</h3>
+            <template x-for="className in overviewClasses()" :key="className">
+              <section class="mt-4 border-t border-slate-100 pt-4">
+                <h4 class="font-bold text-teal-800" x-text="`${className}｜${peopleByClass(className).length} 人`"></h4>
+                <div class="mt-3 space-y-2">
+                  <template x-for="person in peopleByClass(className)" :key="`${className}-${person.name}`">
+                    <div class="rounded-md bg-slate-50 p-3 text-sm leading-6">
+                      <p><strong x-text="person.name"></strong> <span x-text="person.bus"></span></p>
+                      <p class="text-slate-600" x-text="personSummary(person)"></p>
+                    </div>
+                  </template>
+                </div>
+              </section>
+            </template>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" x-show="overviewTab === 'room'">
+            <h3 class="text-xl font-bold">房號查詢</h3>
+            <div class="mt-3 space-y-2">
+              <template x-for="person in filteredOverviewPeople()" :key="`room-${person.name}-${person.roomGroup}`">
+                <div class="rounded-md bg-slate-50 p-3 text-sm leading-6">
+                  <p><strong x-text="person.name"></strong> <span x-text="person.roleClass"></span></p>
+                  <p class="text-slate-600" x-text="`編組 ${person.roomGroup || '尚未公告'}｜D1 ${person.firstDayRoomNo || '尚未公告'}｜D2 ${person.secondDayRoomNo || '尚未公告'}`"></p>
+                  <p class="text-slate-600" x-text="person.roomMembers"></p>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" x-show="overviewTab === 'table'">
+            <h3 class="text-xl font-bold">桌次查詢</h3>
+            <template x-for="tableNo in overviewTables()" :key="tableNo">
+              <section class="mt-4 border-t border-slate-100 pt-4">
+                <h4 class="font-bold text-teal-800" x-text="`${tableNo}｜${peopleByTable(tableNo).length} 人`"></h4>
+                <p class="mt-2 text-sm leading-6 text-slate-600" x-text="peopleByTable(tableNo).map((person) => `${person.name}${person.vegetarian ? '（素）' : ''}`).join('、')"></p>
+              </section>
+            </template>
+          </div>
+
+          <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" x-show="overviewTab === 'contacts'">
+            <h3 class="text-xl font-bold">全團聯絡資訊</h3>
+            <div class="mt-3 space-y-2">
+              <template x-for="contact in overview?.contacts || []" :key="`overview-contact-${contact.type}-${contact.name}-${contact.serviceBus}`">
+                <div class="rounded-md bg-slate-50 p-3">
+                  <p class="text-sm font-semibold text-teal-800" x-text="[contact.type, contact.serviceBus].filter(Boolean).join('｜')"></p>
+                  <p class="mt-1 font-bold" x-text="contact.name"></p>
+                  <a class="mt-1 inline-block text-sm font-semibold text-teal-700" x-show="contact.phone" :href="phoneHref(contact.phone)" x-text="contact.phone"></a>
+                  <p class="mt-1 text-sm text-slate-600" x-show="contact.note" x-text="contact.note"></p>
+                </div>
+              </template>
+            </div>
+          </div>
+        </section>
+
+        <section
           id="my-info"
           class="space-y-4"
           x-show="state === 'bound' && profile"
@@ -281,7 +447,18 @@
           lineUserId: "",
           profile: null,
           itinerary: [],
+          overview: null,
+          admin: null,
           activeView: "info",
+          overviewTab: "bus",
+          overviewSearch: "",
+          overviewTabs: [
+            { key: "bus", label: "分車" },
+            { key: "class", label: "班級" },
+            { key: "room", label: "房號" },
+            { key: "table", label: "桌次" },
+            { key: "contacts", label: "聯絡" },
+          ],
           settings: {
             activityName: "",
             tableMealLabel: "我的桌號",
@@ -293,6 +470,10 @@
             studentId: "",
             phoneLast3: "",
           },
+          adminForm: {
+            name: "",
+            phoneLast3: "",
+          },
 
           async init() {
             try {
@@ -300,9 +481,13 @@
               await this.loadSettings();
               await this.loadItinerary();
               await this.initLiff();
+              if (this.requestedView() === "overview") {
+                await this.initOverview();
+                return;
+              }
               await this.loadMe();
             } catch (error) {
-              this.state = "unbound";
+              this.state = this.requestedView() === "overview" ? "adminAuth" : "unbound";
               this.message = error.message || "初始化失敗，請稍後再試。";
             }
           },
@@ -363,6 +548,66 @@
             }
 
             throw new Error(result.message || "查詢綁定狀態失敗。");
+          },
+
+          async initOverview() {
+            const adminResult = await this.callApi({
+              action: "adminMe",
+              lineUserId: this.lineUserId,
+            });
+
+            if (!adminResult.ok) {
+              this.state = "adminAuth";
+              this.message = "";
+              return;
+            }
+
+            this.admin = adminResult.admin;
+            await this.loadOverview();
+          },
+
+          async verifyAdmin() {
+            this.message = "";
+            if (!this.adminForm.name) {
+              this.message = "請輸入姓名。";
+              return;
+            }
+            if (!this.adminForm.phoneLast3) {
+              this.message = "請輸入手機末三碼。";
+              return;
+            }
+
+            this.submitting = true;
+            try {
+              const result = await this.callApi({
+                action: "verifyAdmin",
+                name: this.adminForm.name,
+                phoneLast3: this.adminForm.phoneLast3,
+                lineUserId: this.lineUserId,
+              });
+              if (!result.ok) {
+                throw new Error(result.message || "管理者驗證失敗。");
+              }
+              this.admin = result.admin;
+              await this.loadOverview();
+            } catch (error) {
+              this.message = error.message || "管理者驗證失敗。";
+            } finally {
+              this.submitting = false;
+            }
+          },
+
+          async loadOverview() {
+            const result = await this.callApi({
+              action: "overview",
+              lineUserId: this.lineUserId,
+            });
+            if (!result.ok) {
+              throw new Error(result.message || "讀取領隊總覽失敗。");
+            }
+            this.overview = result.overview;
+            this.state = "overview";
+            this.message = "";
           },
 
           async verifyAndBind() {
@@ -495,7 +740,7 @@
 
           requestedView() {
             const view = new URLSearchParams(window.location.search).get("view") || window.location.hash.replace("#", "");
-            return ["info", "itinerary", "contacts"].includes(view) ? view : "info";
+            return ["info", "itinerary", "contacts", "overview"].includes(view) ? view : "info";
           },
 
           setView(view) {
@@ -504,6 +749,66 @@
             url.searchParams.set("view", this.activeView);
             window.history.replaceState({}, "", url.toString());
             window.scrollTo({ top: 0, behavior: "smooth" });
+          },
+
+          filteredOverviewPeople() {
+            const people = this.overview?.people || [];
+            const keyword = this.overviewSearch.toLowerCase();
+            if (!keyword) return people;
+            return people.filter((person) => [
+              person.name,
+              person.type,
+              person.roleClass,
+              person.bus,
+              person.tableNo,
+              person.roomGroup,
+              person.roomMembers,
+              person.firstDayRoomNo,
+              person.secondDayRoomNo,
+              person.vegetarian,
+            ].some((value) => String(value || "").toLowerCase().includes(keyword)));
+          },
+
+          overviewBuses() {
+            return [...new Set(this.filteredOverviewPeople().map((person) => person.bus).filter(Boolean))].sort();
+          },
+
+          overviewClasses() {
+            return [...new Set(this.filteredOverviewPeople()
+              .filter((person) => person.type === "學生")
+              .map((person) => person.roleClass)
+              .filter(Boolean))].sort();
+          },
+
+          overviewTables() {
+            return [...new Set(this.filteredOverviewPeople().map((person) => person.tableNo).filter(Boolean))].sort((a, b) => {
+              const na = Number(String(a).replace(/\D/g, ""));
+              const nb = Number(String(b).replace(/\D/g, ""));
+              return na - nb;
+            });
+          },
+
+          peopleByBus(bus) {
+            return this.filteredOverviewPeople().filter((person) => person.bus === bus);
+          },
+
+          peopleByClass(className) {
+            return this.filteredOverviewPeople().filter((person) => person.roleClass === className);
+          },
+
+          peopleByTable(tableNo) {
+            return this.filteredOverviewPeople().filter((person) => person.tableNo === tableNo);
+          },
+
+          personSummary(person) {
+            return [
+              person.bus,
+              person.tableNo,
+              person.roomGroup,
+              `D1 ${person.firstDayRoomNo || "未公告"}`,
+              `D2 ${person.secondDayRoomNo || "未公告"}`,
+              person.vegetarian ? "素食" : "",
+            ].filter(Boolean).join("｜");
           },
         };
       }

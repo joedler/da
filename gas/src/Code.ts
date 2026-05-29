@@ -50,6 +50,37 @@ interface ItineraryItem {
   hotelPhone: string;
 }
 
+interface AdminUser {
+  name: string;
+  role: string;
+  phoneLast3: string;
+  lineUserId: string;
+  permission: string;
+  serviceBus: string;
+  note: string;
+}
+
+interface OverviewPerson {
+  name: string;
+  type: string;
+  roleClass: string;
+  bus: string;
+  tableNo: string;
+  roomGroup: string;
+  roomMembers: string;
+  vegetarian: string;
+  firstDayRoomNo: string;
+  secondDayRoomNo: string;
+  bound: boolean;
+}
+
+interface OverviewData {
+  admin: AdminUser;
+  stats: Record<string, unknown>;
+  people: OverviewPerson[];
+  contacts: ApiContact[];
+}
+
 interface ApiResponse {
   ok: boolean;
   status?: string;
@@ -57,6 +88,8 @@ interface ApiResponse {
   message?: string;
   profile?: ApiProfile;
   itinerary?: ItineraryItem[];
+  overview?: OverviewData;
+  admin?: AdminUser;
   [key: string]: unknown;
 }
 
@@ -83,6 +116,7 @@ const CONFIG = {
   DEFAULT_ITINERARY_SHEET: "itinerary",
   DEFAULT_ROOM_ASSIGNMENTS_SHEET: "room_assignments",
   DEFAULT_CONTACTS_SHEET: "contacts",
+  DEFAULT_ADMINS_SHEET: "admins",
   DEFAULT_API_KEY: "dev-change-me",
 } as const;
 
@@ -115,6 +149,22 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
         ok: true,
         itinerary: getItinerary_(),
       });
+    }
+
+    if (action === "adminMe") {
+      return json_(getAdminMe_(getParam_(e, "lineUserId")));
+    }
+
+    if (action === "verifyAdmin") {
+      return json_(verifyAdmin_({
+        name: getParam_(e, "name"),
+        phoneLast3: getParam_(e, "phoneLast3"),
+        lineUserId: getParam_(e, "lineUserId"),
+      }));
+    }
+
+    if (action === "overview") {
+      return json_(getOverview_(getParam_(e, "lineUserId")));
     }
 
     if (action === "verifyAndBind") {
@@ -158,6 +208,10 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
 
     if (action === "unbind") {
       return json_(unbind_(body));
+    }
+
+    if (action === "verifyAdmin") {
+      return json_(verifyAdmin_(body));
     }
 
     return json_({ ok: false, error: "UNKNOWN_ACTION" });
@@ -531,6 +585,75 @@ function unbind_(body: ApiPayload): ApiResponse {
   }
 }
 
+function verifyAdmin_(body: ApiPayload): ApiResponse {
+  const name = normalize_(body.name);
+  const phoneLast3 = normalize_(body.phoneLast3);
+  const lineUserId = normalize_(body.lineUserId);
+
+  require_(name, "姓名必填");
+  require_(phoneLast3, "手機末三碼必填");
+  require_(lineUserId, "LINE 使用者 ID 必填");
+
+  const sheet = getAdminsSheet_();
+  if (!sheet) return { ok: false, error: "ADMINS_NOT_FOUND", message: "尚未建立 admins 權限表。" };
+
+  const table = readSimpleTable_(sheet);
+  const rowIndex = table.rows.findIndex((row) =>
+    readOptional_(row, table.header, "姓名") === name &&
+    readOptional_(row, table.header, "手機末三碼") === phoneLast3
+  );
+
+  if (rowIndex < 0) {
+    return { ok: false, error: "ADMIN_VERIFY_FAILED", message: "管理者驗證失敗，請確認姓名與手機末三碼。" };
+  }
+
+  const row = table.rows[rowIndex];
+  const existingLineUserId = readOptional_(row, table.header, "LINE使用者ID");
+  if (existingLineUserId && existingLineUserId !== lineUserId) {
+    return { ok: false, error: "ADMIN_ALREADY_BOUND", message: "此管理者資料已綁定其他 LINE 帳號。" };
+  }
+
+  if (table.header["LINE使用者ID"] === undefined) {
+    return { ok: false, error: "ADMINS_MISSING_FIELD", message: "admins 缺少 LINE使用者ID 欄位。" };
+  }
+
+  sheet.getRange(rowIndex + 2, table.header["LINE使用者ID"] + 1).setValue(lineUserId);
+  const updated = sheet.getRange(rowIndex + 2, 1, 1, table.values[0].length).getValues()[0];
+  return {
+    ok: true,
+    status: "ADMIN_BOUND",
+    admin: buildAdmin_(updated, table.header),
+  };
+}
+
+function getAdminMe_(lineUserId: string): ApiResponse {
+  const admin = getAuthorizedAdmin_(lineUserId);
+  if (!admin) return { ok: false, error: "NOT_ADMIN", message: "此 LINE 帳號尚未取得領隊總覽權限。" };
+  return { ok: true, status: "ADMIN_BOUND", admin };
+}
+
+function getOverview_(lineUserId: string): ApiResponse {
+  const admin = getAuthorizedAdmin_(lineUserId);
+  if (!admin) return { ok: false, error: "NOT_ADMIN", message: "此頁面限領隊或管理者使用。" };
+
+  const peopleTable = readTable_(getPeopleSheet_());
+  const roomAssignments = getRoomAssignmentMap_();
+  const people = peopleTable.rows.map((row) => buildOverviewPerson_(row, peopleTable.header, roomAssignments));
+  const visiblePeople = admin.serviceBus
+    ? people.filter((person) => person.bus === admin.serviceBus || person.type === "老師")
+    : people;
+
+  return {
+    ok: true,
+    overview: {
+      admin,
+      stats: buildOverviewStats_(visiblePeople),
+      people: visiblePeople,
+      contacts: getContactsForBus_(admin.serviceBus),
+    },
+  };
+}
+
 function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
   const roomGroup = read_(row, header, "房間編組");
   const roomAssignment = getRoomAssignment_(roomGroup);
@@ -561,6 +684,50 @@ function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
   };
 }
 
+function buildOverviewPerson_(
+  row: SheetRow,
+  header: HeaderMap,
+  roomAssignments: Record<string, {
+    firstDayHotel: string;
+    firstDayRoomNo: string;
+    secondDayHotel: string;
+    secondDayRoomNo: string;
+  }>
+): OverviewPerson {
+  const roomGroup = read_(row, header, "房間編組");
+  const assignment = roomAssignments[roomGroup];
+  const legacyRoomNo = read_(row, header, "房號") || "尚未公告";
+  return {
+    name: read_(row, header, "姓名"),
+    type: read_(row, header, "類別"),
+    roleClass: read_(row, header, "班級或職稱"),
+    bus: read_(row, header, "車次"),
+    tableNo: read_(row, header, "桌號"),
+    roomGroup,
+    roomMembers: read_(row, header, "同房人員"),
+    vegetarian: read_(row, header, "素食註記") || "",
+    firstDayRoomNo: readOptional_(row, header, "第一天房號") || assignment?.firstDayRoomNo || legacyRoomNo,
+    secondDayRoomNo: readOptional_(row, header, "第二天房號") || assignment?.secondDayRoomNo || legacyRoomNo,
+    bound: Boolean(read_(row, header, "LINE使用者ID")),
+  };
+}
+
+function buildOverviewStats_(people: OverviewPerson[]): Record<string, unknown> {
+  const busCounts: Record<string, number> = {};
+  people.forEach((person) => {
+    if (person.bus) busCounts[person.bus] = (busCounts[person.bus] || 0) + 1;
+  });
+
+  return {
+    total: people.length,
+    students: people.filter((person) => person.type === "學生").length,
+    teachers: people.filter((person) => person.type === "老師").length,
+    vegetarian: people.filter((person) => Boolean(person.vegetarian)).length,
+    unbound: people.filter((person) => !person.bound).length,
+    busCounts,
+  };
+}
+
 function getContactsForBus_(bus: string): ApiContact[] {
   const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
   const sheetName = getProperty_("CONTACTS_SHEET", CONFIG.DEFAULT_CONTACTS_SHEET);
@@ -588,9 +755,62 @@ function getContactsForBus_(bus: string): ApiContact[] {
     .filter((item) => item.type && item.name)
     .filter((item) => {
       if (["護理師", "旅行社窗口"].includes(item.type)) return true;
-      if (!bus) return item.type === "旅行社窗口";
+      if (!bus) return true;
       return item.serviceBus === bus;
     });
+}
+
+function getAuthorizedAdmin_(lineUserId: string): AdminUser | null {
+  const normalizedLineUserId = normalize_(lineUserId);
+  if (!normalizedLineUserId) return null;
+
+  const sheet = getAdminsSheet_();
+  if (!sheet) return null;
+
+  const table = readSimpleTable_(sheet);
+  const row = table.rows.find((item) => readOptional_(item, table.header, "LINE使用者ID") === normalizedLineUserId);
+  if (!row) return null;
+
+  const admin = buildAdmin_(row, table.header);
+  if (!hasOverviewPermission_(admin)) return null;
+  return admin;
+}
+
+function buildAdmin_(row: SheetRow, header: HeaderMap): AdminUser {
+  return {
+    name: readOptional_(row, header, "姓名"),
+    role: readOptional_(row, header, "角色"),
+    phoneLast3: readOptional_(row, header, "手機末三碼"),
+    lineUserId: readOptional_(row, header, "LINE使用者ID"),
+    permission: readOptional_(row, header, "權限"),
+    serviceBus: readOptional_(row, header, "服務車次"),
+    note: readOptional_(row, header, "備註"),
+  };
+}
+
+function hasOverviewPermission_(admin: AdminUser): boolean {
+  const permission = admin.permission.toLowerCase();
+  return permission.includes("overview") || permission.includes("admin") || permission.includes("all");
+}
+
+function getAdminsSheet_(): GoogleAppsScript.Spreadsheet.Sheet | null {
+  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const sheetName = getProperty_("ADMINS_SHEET", CONFIG.DEFAULT_ADMINS_SHEET);
+  return spreadsheet.getSheetByName(sheetName);
+}
+
+function readSimpleTable_(sheet: GoogleAppsScript.Spreadsheet.Sheet): PeopleTable {
+  const values = sheet.getDataRange().getValues();
+  const headerRow = values[0].map(normalize_);
+  const header: HeaderMap = {};
+  headerRow.forEach((name, index) => {
+    if (name) header[name] = index;
+  });
+  return {
+    values,
+    header,
+    rows: values.slice(1).filter((row) => row.some((cell) => normalize_(cell))),
+  };
 }
 
 function getRoomAssignment_(roomGroup: string): {
@@ -630,6 +850,38 @@ function getRoomAssignment_(roomGroup: string): {
     secondDayHotel: readOptional_(row, header, "第二天飯店"),
     secondDayRoomNo: readOptional_(row, header, "第二天房號"),
   };
+}
+
+function getRoomAssignmentMap_(): Record<string, {
+  firstDayHotel: string;
+  firstDayRoomNo: string;
+  secondDayHotel: string;
+  secondDayRoomNo: string;
+}> {
+  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const sheetName = getProperty_("ROOM_ASSIGNMENTS_SHEET", CONFIG.DEFAULT_ROOM_ASSIGNMENTS_SHEET);
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) return {};
+
+  const table = readSimpleTable_(sheet);
+  const map: Record<string, {
+    firstDayHotel: string;
+    firstDayRoomNo: string;
+    secondDayHotel: string;
+    secondDayRoomNo: string;
+  }> = {};
+
+  table.rows.forEach((row) => {
+    const roomGroup = readOptional_(row, table.header, "房間編組");
+    if (!roomGroup) return;
+    map[roomGroup] = {
+      firstDayHotel: readOptional_(row, table.header, "第一天飯店"),
+      firstDayRoomNo: readOptional_(row, table.header, "第一天房號"),
+      secondDayHotel: readOptional_(row, table.header, "第二天飯店"),
+      secondDayRoomNo: readOptional_(row, table.header, "第二天房號"),
+    };
+  });
+  return map;
 }
 
 function getPeopleSheet_(): GoogleAppsScript.Spreadsheet.Sheet {
