@@ -16,9 +16,25 @@ interface ApiProfile {
   bus: string;
   tableNo: string;
   roomNo: string;
+  firstDayHotel: string;
+  firstDayRoomNo: string;
+  secondDayHotel: string;
+  secondDayRoomNo: string;
   roomGroup: string;
   roomMembers: string;
   vegetarian: string;
+}
+
+interface ItineraryItem {
+  day: string;
+  date: string;
+  weekday: string;
+  time: string;
+  title: string;
+  note: string;
+  hotel: string;
+  hotelAddress: string;
+  hotelPhone: string;
 }
 
 interface ApiResponse {
@@ -27,6 +43,7 @@ interface ApiResponse {
   error?: string;
   message?: string;
   profile?: ApiProfile;
+  itinerary?: ItineraryItem[];
   [key: string]: unknown;
 }
 
@@ -39,6 +56,7 @@ interface AppSettings {
 interface LineWebhookEvent {
   type?: string;
   replyToken?: string;
+  source?: { userId?: string };
   message?: {
     type?: string;
     text?: string;
@@ -49,6 +67,8 @@ const CONFIG = {
   DEFAULT_SPREADSHEET_ID: "SET_IN_SCRIPT_PROPERTIES",
   DEFAULT_PEOPLE_SHEET: "people",
   DEFAULT_SETTINGS_SHEET: "settings",
+  DEFAULT_ITINERARY_SHEET: "itinerary",
+  DEFAULT_ROOM_ASSIGNMENTS_SHEET: "room_assignments",
   DEFAULT_API_KEY: "dev-change-me",
 } as const;
 
@@ -73,6 +93,13 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
       return json_({
         ok: true,
         settings: getAppSettings_(),
+      });
+    }
+
+    if (action === "itinerary") {
+      return json_({
+        ok: true,
+        itinerary: getItinerary_(),
       });
     }
 
@@ -142,7 +169,19 @@ function handleLineWebhook_(body: ApiPayload): void {
     }
 
     if (event.message?.type !== "text") return;
-    replyText_(event.replyToken, buildBotIntroMessage_());
+
+    const userId = normalize_(event.source?.userId || "");
+
+    // 查詢指令：輸入「查詢」或任意文字都觸發查詢
+    const result = getMyInfo_(userId);
+    if (!result.ok) {
+      // 尚未綁定
+      replyText_(event.replyToken, buildBotIntroMessage_());
+      return;
+    }
+
+    const p = result.profile!;
+    replyFlex_(event.replyToken, p);
   });
 }
 
@@ -158,6 +197,119 @@ function buildBotIntroMessage_(): string {
     ``,
     `本帳號為資訊查詢工具，若資料有誤或需人工協助，請聯繫領隊或承辦人員。`,
   ].join("\n");
+}
+
+function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
+  const hasVegetarian = Boolean(p.vegetarian && p.vegetarian !== "無" && p.vegetarian !== "");
+
+  const infoRow = (
+    label: string,
+    value: string,
+    opts?: { wrap?: boolean; valueColor?: string; bold?: boolean }
+  ): Record<string, unknown> => ({
+    type: "box",
+    layout: "horizontal",
+    contents: [
+      {
+        type: "text",
+        text: label,
+        color: "#888888",
+        size: "sm",
+        flex: 3,
+      },
+      {
+        type: "text",
+        text: value || "尚未公告",
+        color: opts?.valueColor ?? (value ? "#222222" : "#AAAAAA"),
+        size: "sm",
+        flex: 4,
+        align: "end",
+        wrap: opts?.wrap ?? false,
+        weight: opts?.bold ? "bold" : "regular",
+      },
+    ],
+    paddingTop: "12px",
+    paddingBottom: "12px",
+    paddingStart: "16px",
+    paddingEnd: "16px",
+  });
+
+  const sep: Record<string, unknown> = { type: "separator", color: "#F0F0F0" };
+
+  return {
+    type: "bubble",
+    size: "mega",
+    header: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        { type: "text", text: "🎓 畢旅小幫手", color: "#ffffff99", size: "xs" },
+        { type: "text", text: p.name, color: "#ffffff", size: "xxl", weight: "bold" },
+        {
+          type: "text",
+          text: [p.roleClass, p.type].filter(Boolean).join("・"),
+          color: "#ffffffbb",
+          size: "sm",
+        },
+      ],
+      paddingAll: "20px",
+      paddingBottom: "24px",
+      background: {
+        type: "linearGradient",
+        angle: "135deg",
+        startColor: "#FF6B35",
+        endColor: "#C0392B",
+      },
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        infoRow("🚌 車次", p.bus),
+        sep,
+        infoRow("🍽️ 桌號", p.tableNo),
+        sep,
+        infoRow("🏨 第一天房號", p.firstDayRoomNo || p.roomNo),
+        sep,
+        infoRow("🏨 第二天房號", p.secondDayRoomNo || p.roomNo),
+        sep,
+        infoRow("👥 同房人員", p.roomMembers, { wrap: true }),
+        sep,
+        hasVegetarian
+          ? infoRow("🥗 素食", "✓ " + p.vegetarian, { valueColor: "#27AE60", bold: true })
+          : infoRow("🥗 素食", "無", { valueColor: "#AAAAAA" }),
+      ],
+      paddingAll: "0px",
+      spacing: "none",
+    },
+  };
+}
+
+function replyFlex_(replyToken: string, p: ApiProfile): void {
+  const channelAccessToken = getProperty_("LINE_CHANNEL_ACCESS_TOKEN", "");
+  if (!channelAccessToken) {
+    Logger.log("LINE flex reply skipped: LINE_CHANNEL_ACCESS_TOKEN is empty.");
+    return;
+  }
+
+  const response = UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: `Bearer ${channelAccessToken}` },
+    payload: JSON.stringify({
+      replyToken,
+      messages: [
+        {
+          type: "flex",
+          altText: `${p.name} 的旅遊資訊`,
+          contents: buildProfileFlex_(p),
+        },
+      ],
+    }),
+    muteHttpExceptions: true,
+  });
+  Logger.log(`LINE flex reply status: ${response.getResponseCode()}`);
+  Logger.log(`LINE flex reply body: ${response.getContentText()}`);
 }
 
 function replyText_(replyToken: string, text: string): void {
@@ -181,6 +333,13 @@ function replyText_(replyToken: string, text: string): void {
   });
   Logger.log(`LINE reply status: ${response.getResponseCode()}`);
   Logger.log(`LINE reply body: ${response.getContentText()}`);
+}
+
+function forceAuth(): void {
+  UrlFetchApp.fetch("https://www.google.com");
+  DriveApp.getRootFolder();
+  SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  Logger.log("forceAuth 完成：外部連線 + Drive + Spreadsheet 授權已取得");
 }
 
 function testHealth(): void {
@@ -357,6 +516,10 @@ function unbind_(body: ApiPayload): ApiResponse {
 }
 
 function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
+  const roomGroup = read_(row, header, "房間編組");
+  const roomAssignment = getRoomAssignment_(roomGroup);
+  const legacyRoomNo = read_(row, header, "房號") || "尚未公告";
+
   return {
     personId: read_(row, header, "person_id"),
     type: read_(row, header, "類別"),
@@ -364,10 +527,53 @@ function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
     roleClass: read_(row, header, "班級或職稱"),
     bus: read_(row, header, "車次"),
     tableNo: read_(row, header, "桌號"),
-    roomNo: read_(row, header, "房號") || "尚未公告",
-    roomGroup: read_(row, header, "房間編組"),
+    roomNo: legacyRoomNo,
+    firstDayHotel: readOptional_(row, header, "第一天飯店") || roomAssignment.firstDayHotel,
+    firstDayRoomNo: readOptional_(row, header, "第一天房號") || roomAssignment.firstDayRoomNo || legacyRoomNo,
+    secondDayHotel: readOptional_(row, header, "第二天飯店") || roomAssignment.secondDayHotel,
+    secondDayRoomNo: readOptional_(row, header, "第二天房號") || roomAssignment.secondDayRoomNo || legacyRoomNo,
+    roomGroup,
     roomMembers: read_(row, header, "同房人員"),
     vegetarian: read_(row, header, "素食註記") || "無",
+  };
+}
+
+function getRoomAssignment_(roomGroup: string): {
+  firstDayHotel: string;
+  firstDayRoomNo: string;
+  secondDayHotel: string;
+  secondDayRoomNo: string;
+} {
+  const empty = {
+    firstDayHotel: "",
+    firstDayRoomNo: "",
+    secondDayHotel: "",
+    secondDayRoomNo: "",
+  };
+  if (!roomGroup) return empty;
+
+  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const sheetName = getProperty_("ROOM_ASSIGNMENTS_SHEET", CONFIG.DEFAULT_ROOM_ASSIGNMENTS_SHEET);
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) return empty;
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return empty;
+
+  const headerRow = values[0].map(normalize_);
+  const header: HeaderMap = {};
+  headerRow.forEach((name, index) => {
+    if (name) header[name] = index;
+  });
+
+  const row = values.slice(1).find((item) => readOptional_(item, header, "房間編組") === roomGroup);
+  if (!row) return empty;
+
+  return {
+    firstDayHotel: readOptional_(row, header, "第一天飯店"),
+    firstDayRoomNo: readOptional_(row, header, "第一天房號"),
+    secondDayHotel: readOptional_(row, header, "第二天飯店"),
+    secondDayRoomNo: readOptional_(row, header, "第二天房號"),
   };
 }
 
@@ -385,6 +591,40 @@ function getSettingsSheet_(): GoogleAppsScript.Spreadsheet.Sheet {
   const sheet = spreadsheet.getSheetByName(settingsSheetName);
   if (!sheet) throw new Error(`找不到工作表：${settingsSheetName}`);
   return sheet;
+}
+
+function getItinerarySheet_(): GoogleAppsScript.Spreadsheet.Sheet | null {
+  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const itinerarySheetName = getProperty_("ITINERARY_SHEET", CONFIG.DEFAULT_ITINERARY_SHEET);
+  return spreadsheet.getSheetByName(itinerarySheetName);
+}
+
+function getItinerary_(): ItineraryItem[] {
+  const sheet = getItinerarySheet_();
+  if (!sheet) return [];
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const headerRow = values[0].map(normalize_);
+  const header: HeaderMap = {};
+  headerRow.forEach((name, index) => {
+    if (name) header[name] = index;
+  });
+
+  return values.slice(1)
+    .filter((row) => readOptional_(row, header, "day") || readOptional_(row, header, "title"))
+    .map((row) => ({
+      day: readOptional_(row, header, "day"),
+      date: readOptional_(row, header, "date"),
+      weekday: readOptional_(row, header, "weekday"),
+      time: readOptional_(row, header, "time"),
+      title: readOptional_(row, header, "title"),
+      note: readOptional_(row, header, "note"),
+      hotel: readOptional_(row, header, "hotel"),
+      hotelAddress: readOptional_(row, header, "hotel_address"),
+      hotelPhone: readOptional_(row, header, "hotel_phone"),
+    }));
 }
 
 function getAppSettings_(): AppSettings {
@@ -450,6 +690,11 @@ function getParam_(e: GoogleAppsScript.Events.DoGet, name: string): string {
 }
 
 function read_(row: SheetRow, header: HeaderMap, name: string): string {
+  return normalize_(row[header[name]]);
+}
+
+function readOptional_(row: SheetRow, header: HeaderMap, name: string): string {
+  if (header[name] === undefined) return "";
   return normalize_(row[header[name]]);
 }
 
