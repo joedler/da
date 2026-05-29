@@ -162,7 +162,7 @@
             <div class="flex items-center justify-between gap-3">
               <div>
                 <p class="text-sm text-slate-500">行程表</p>
-                <h3 class="mt-1 text-xl font-bold">三天兩夜時間軸</h3>
+                <h3 class="mt-1 text-xl font-bold">行程表</h3>
               </div>
             </div>
 
@@ -384,7 +384,29 @@
           dayLabel(day) {
             const first = this.itinerary.find((item) => item.day === day);
             if (!first) return day;
-            return `${day} ${first.date || ""} ${first.weekday ? `(${first.weekday})` : ""}`.trim();
+            const dayNumber = String(day).replace(/^Day/i, "D_");
+            const date = this.formatMonthDay(first.date);
+            const weekday = first.weekday ? `(${first.weekday})` : "";
+            return [dayNumber, date, weekday].filter(Boolean).join(" ");
+          },
+
+          formatMonthDay(value) {
+            if (!value) return "";
+
+            const raw = String(value);
+            const directMatch = raw.match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+            if (directMatch) {
+              return `${directMatch[2].padStart(2, "0")}/${directMatch[3].padStart(2, "0")}`;
+            }
+
+            const parsed = new Date(raw);
+            if (!Number.isNaN(parsed.getTime())) {
+              const month = String(parsed.getMonth() + 1).padStart(2, "0");
+              const date = String(parsed.getDate()).padStart(2, "0");
+              return `${month}/${date}`;
+            }
+
+            return raw;
           },
         };
       }
