@@ -128,6 +128,16 @@
               <p class="mt-1 text-xl font-bold" x-text="profile.bus || '尚未公告'"></p>
             </div>
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">我的領隊</p>
+              <p class="mt-1 text-lg font-bold" x-text="contactLabel()"></p>
+              <a
+                class="mt-1 inline-block text-sm font-semibold text-teal-700"
+                x-show="profile.busLeaderPhone"
+                :href="`tel:${profile.busLeaderPhone}`"
+                x-text="profile.busLeaderPhone"
+              ></a>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <p class="text-sm text-slate-500" x-text="settings.tableMealLabel || '我的桌號'"></p>
               <p class="mt-1 text-xl font-bold" x-text="profile.tableNo || '尚未公告'"></p>
             </div>
@@ -407,6 +417,11 @@
             }
 
             return raw;
+          },
+
+          contactLabel() {
+            if (!this.profile) return "尚未公告";
+            return this.profile.busLeaderName || "尚未公告";
           },
         };
       }

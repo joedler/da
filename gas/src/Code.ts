@@ -15,6 +15,9 @@ interface ApiProfile {
   roleClass: string;
   bus: string;
   tableNo: string;
+  busLeaderName: string;
+  busLeaderPhone: string;
+  busLeaderLine: string;
   roomNo: string;
   firstDayHotel: string;
   firstDayRoomNo: string;
@@ -69,6 +72,7 @@ const CONFIG = {
   DEFAULT_SETTINGS_SHEET: "settings",
   DEFAULT_ITINERARY_SHEET: "itinerary",
   DEFAULT_ROOM_ASSIGNMENTS_SHEET: "room_assignments",
+  DEFAULT_CONTACTS_SHEET: "contacts",
   DEFAULT_API_KEY: "dev-change-me",
 } as const;
 
@@ -266,6 +270,8 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
       layout: "vertical",
       contents: [
         infoRow("🚌 車次", p.bus),
+        sep,
+        infoRow("📞 領隊", [p.busLeaderName, p.busLeaderPhone].filter(Boolean).join(" "), { wrap: true }),
         sep,
         infoRow("🍽️ 桌號", p.tableNo),
         sep,
@@ -519,14 +525,19 @@ function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
   const roomGroup = read_(row, header, "房間編組");
   const roomAssignment = getRoomAssignment_(roomGroup);
   const legacyRoomNo = read_(row, header, "房號") || "尚未公告";
+  const bus = read_(row, header, "車次");
+  const busLeader = getBusLeader_(bus);
 
   return {
     personId: read_(row, header, "person_id"),
     type: read_(row, header, "類別"),
     name: read_(row, header, "姓名"),
     roleClass: read_(row, header, "班級或職稱"),
-    bus: read_(row, header, "車次"),
+    bus,
     tableNo: read_(row, header, "桌號"),
+    busLeaderName: busLeader.name,
+    busLeaderPhone: busLeader.phone,
+    busLeaderLine: busLeader.line,
     roomNo: legacyRoomNo,
     firstDayHotel: readOptional_(row, header, "第一天飯店") || roomAssignment.firstDayHotel,
     firstDayRoomNo: readOptional_(row, header, "第一天房號") || roomAssignment.firstDayRoomNo || legacyRoomNo,
@@ -535,6 +546,38 @@ function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
     roomGroup,
     roomMembers: read_(row, header, "同房人員"),
     vegetarian: read_(row, header, "素食註記") || "無",
+  };
+}
+
+function getBusLeader_(bus: string): { name: string; phone: string; line: string } {
+  const empty = { name: "", phone: "", line: "" };
+  if (!bus) return empty;
+
+  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const sheetName = getProperty_("CONTACTS_SHEET", CONFIG.DEFAULT_CONTACTS_SHEET);
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) return empty;
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return empty;
+
+  const headerRow = values[0].map(normalize_);
+  const header: HeaderMap = {};
+  headerRow.forEach((name, index) => {
+    if (name) header[name] = index;
+  });
+
+  const row = values.slice(1).find((item) => {
+    const type = readOptional_(item, header, "類型");
+    const serviceBus = readOptional_(item, header, "服務車次");
+    return type === "旅行社領隊" && serviceBus === bus;
+  });
+  if (!row) return empty;
+
+  return {
+    name: readOptional_(row, header, "姓名"),
+    phone: readOptional_(row, header, "電話"),
+    line: readOptional_(row, header, "LINE或其他聯絡方式"),
   };
 }
 
