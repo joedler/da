@@ -774,6 +774,11 @@
           },
 
           overviewClasses() {
+            const matchedTeacherClasses = this.matchedTeacherClasses();
+            if (this.overviewSearch && matchedTeacherClasses.length) {
+              return matchedTeacherClasses;
+            }
+
             return [...new Set(this.filteredOverviewPeople()
               .filter((person) => person.type === "學生")
               .map((person) => person.roleClass)
@@ -793,7 +798,11 @@
           },
 
           peopleByClass(className) {
-            return this.filteredOverviewPeople().filter((person) => person.roleClass === className);
+            const people = this.overview?.people || [];
+            return people.filter((person) =>
+              person.roleClass === className ||
+              person.roleClass === `${className}導師`
+            );
           },
 
           peopleByTable(tableNo) {
@@ -809,6 +818,25 @@
               `D2 ${person.secondDayRoomNo || "未公告"}`,
               person.vegetarian ? "素食" : "",
             ].filter(Boolean).join("｜");
+          },
+
+          matchedTeacherClasses() {
+            const keyword = this.overviewSearch.toLowerCase();
+            if (!keyword) return [];
+            return [...new Set((this.overview?.people || [])
+              .filter((person) => person.type === "老師")
+              .filter((person) => [
+                person.name,
+                person.roleClass,
+                person.bus,
+              ].some((value) => String(value || "").toLowerCase().includes(keyword)))
+              .map((person) => this.teacherClassName(person.roleClass))
+              .filter(Boolean))].sort();
+          },
+
+          teacherClassName(roleClass) {
+            const value = String(roleClass || "");
+            return value.endsWith("導師") ? value.slice(0, -2) : "";
           },
         };
       }

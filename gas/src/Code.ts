@@ -232,7 +232,7 @@ function handleLineWebhook_(body: ApiPayload): void {
     if (!event.replyToken) return;
 
     if (event.type === "follow") {
-      replyText_(event.replyToken, buildBotIntroMessage_());
+      replyFlexMessage_(event.replyToken, "歡迎使用團旅小幫手", buildWelcomeFlex_());
       return;
     }
 
@@ -286,7 +286,7 @@ function handleLineWebhook_(body: ApiPayload): void {
     const result = getMyInfo_(userId);
     if (!result.ok) {
       // 尚未綁定
-      replyText_(event.replyToken, buildBotIntroMessage_());
+      replyFlexMessage_(event.replyToken, "歡迎使用團旅小幫手", buildWelcomeFlex_());
       return;
     }
 
@@ -305,20 +305,6 @@ function isItineraryCommand_(text: string): boolean {
 
 function isContactsCommand_(text: string): boolean {
   return ["聯絡", "連絡", "電話", "窗口", "contacts", "contact"].some((keyword) => text.includes(keyword));
-}
-
-function buildBotIntroMessage_(): string {
-  const liffUrl = getProperty_("LIFF_URL", "");
-  const activityName = getProperty_("ACTIVITY_NAME", "本次團體旅遊");
-  return [
-    `您好，歡迎使用團旅小幫手。`,
-    ``,
-    `本帳號提供 ${activityName} 資訊查詢。`,
-    `請開啟以下連結查詢車次、桌號、房間編組、同房人員與素食註記：`,
-    liffUrl || "請點選下方圖文選單進入查詢頁。",
-    ``,
-    `本帳號為資訊查詢工具，若資料有誤或需人工協助，請聯繫領隊或承辦人員。`,
-  ].join("\n");
 }
 
 function buildLiffUrl_(view: string): string {
@@ -370,6 +356,66 @@ function buildLinkFlex_(options: {
             type: "uri",
             label: options.buttonLabel,
             uri: options.uri,
+          },
+        },
+      ],
+    },
+  };
+}
+
+function buildWelcomeFlex_(): Record<string, unknown> {
+  const activityName = getProperty_("ACTIVITY_NAME", "本次團體旅遊");
+  return {
+    type: "bubble",
+    size: "mega",
+    header: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "20px",
+      backgroundColor: "#0F766E",
+      contents: [
+        { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
+        { type: "text", text: "歡迎使用", color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
+        { type: "text", text: activityName, color: "#ffffffcc", size: "sm", wrap: true, margin: "sm" },
+      ],
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "20px",
+      contents: [
+        {
+          type: "text",
+          text: "請先完成首次驗證與綁定。學生使用姓名與學號；老師使用姓名與手機末三碼。",
+          color: "#334155",
+          size: "sm",
+          wrap: true,
+        },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      paddingAll: "16px",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: "#0F766E",
+          action: {
+            type: "uri",
+            label: "開始查詢",
+            uri: buildLiffUrl_("info"),
+          },
+        },
+        {
+          type: "button",
+          style: "secondary",
+          action: {
+            type: "uri",
+            label: "查看行程表",
+            uri: buildLiffUrl_("itinerary"),
           },
         },
       ],

@@ -37,6 +37,8 @@ def school_contacts() -> list[list[str]]:
             contacts.append(["班導師", name, bus, "", "", role])
         elif role == "護理師":
             contacts.append(["護理師", name, "", "", "", "全團護理支援"])
+        else:
+            contacts.append(["學校窗口", name, bus, "", "", role])
 
     return contacts
 
