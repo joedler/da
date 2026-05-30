@@ -3,7 +3,8 @@
     "gas:build": "tsc -p gas/tsconfig.json && node scripts/copy_gas_manifest.mjs",
     "gas:lint": "eslint \"gas/src/**/*.ts\"",
     "gas:check": "npm run gas:lint && npm run gas:build",
-    "gas:push": "npm run gas:build && cd gas && ..\\node_modules\\.bin\\clasp.cmd push --force"
+    "gas:push": "npm run gas:build && cd gas && ..\\node_modules\\.bin\\clasp.cmd push --force",
+    "gas:deploy": "npm run gas:push && cd gas && ..\\node_modules\\.bin\\clasp.cmd deploy --deploymentId AKfycbxUScNEauoDCetaXQLIrAQf4bJOA3CGtj2UbrOCjZv_qsp_kYGDDUFSZ-Z9KbbJvWu_"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
