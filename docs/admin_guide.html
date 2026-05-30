@@ -252,6 +252,7 @@
 
     table {
       width: 100%;
+      min-width: 600px; /* 防止小螢幕擠壓造成直式文字，啟用水平滾動 */
       border-collapse: collapse;
       font-size: 0.85rem;
       text-align: left;
@@ -278,6 +279,50 @@
       background-color: #fef08a;
       font-weight: 700;
       color: #854d0e;
+    }
+
+    /* Copy Card (用於學校公告文字一鍵複製) */
+    .copy-card {
+      background-color: var(--slate-50);
+      border: 1px dashed var(--slate-200);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      margin-top: 12px;
+    }
+
+    .copy-text {
+      font-size: 0.95rem;
+      color: var(--slate-700);
+      white-space: pre-wrap;
+      font-family: inherit;
+      margin-bottom: 16px;
+    }
+
+    .btn-copy {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .btn-copy:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-copy:active {
+      transform: scale(0.98);
     }
 
     .sheet-badge {
@@ -424,6 +469,31 @@
       <p>現場如遇大範圍資料異動，直接在 Google Sheets 上修改即可即時更新。本系統設有防併發鎖，多位領隊在車上與後台同時讀寫，亦不會造成資料錯亂，請安心操作。</p>
     </div>
 
+    <!-- Announcement Box -->
+    <section>
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        學校群組發布：官方邀請文字範本
+      </h2>
+      <p style="font-size: 0.9rem; color: var(--slate-700); margin-bottom: 12px;">旅行社窗口或領隊可點擊下方按鈕複製，並傳送給學校對接窗口（如學務處主任、活動組長或各班導師），請其轉發至家長及師生班級群組：</p>
+      <div class="copy-card">
+        <div class="copy-text" id="invite-text">您好，畢旅查詢系統已正式上線！請全體師生點選下方連結進行首次驗證綁定，即可隨時掌握您的車次、桌號、房號、同房室友與三天兩夜最新行程。
+
+🔗 專屬綁定查詢連結：
+https://liff.line.me/2010211676-aN5CpjP8
+
+💡 驗證方式：
+1. 學生：輸入「姓名」與「學號」
+2. 老師：輸入「姓名」與「手機末三碼」
+
+驗證後即完成 LINE 綁定，之後再次打開即可自動顯示個人畢旅資訊。目前「房號」與「同房室友」均已公告，完成綁定後即可直接查看完整資訊！</div>
+        <button class="btn-copy" onclick="copyInviteText()">
+          <svg id="copy-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span id="copy-btn-label">一鍵複製公告</span>
+        </button>
+      </div>
+    </section>
+
     <!-- Admin Binding Steps -->
     <section>
       <h2 class="section-title">
@@ -567,5 +637,28 @@
 
   </div>
 
+  <script>
+    function copyInviteText() {
+      const textToCopy = document.getElementById("invite-text").innerText;
+      
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const copyBtnLabel = document.getElementById("copy-btn-label");
+        const copyIcon = document.getElementById("copy-icon");
+        
+        // Success style
+        copyBtnLabel.innerText = "複製成功！";
+        copyIcon.innerHTML = `<path d="M20 6L9 17l-5-5"></path>`;
+        copyIcon.style.color = "#a7f3d0";
+        
+        setTimeout(() => {
+          copyBtnLabel.innerText = "一鍵複製公告";
+          copyIcon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>`;
+          copyIcon.style.color = "";
+        }, 2000);
+      }).catch(err => {
+        alert("複製失敗，請手動全選文字複製！");
+      });
+    }
+  </script>
 </body>
 </html>
