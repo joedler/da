@@ -313,14 +313,12 @@
               class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
               :class="activeView === 'photo' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
               :aria-selected="activeView === 'photo'"
-              @click="setView('photo')">
-              <span aria-hidden="true">📸</span> 上傳照片</button>
+              @click="setView('photo')">上傳照片</button>
             <button type="button" role="tab"
               class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
               :class="activeView === 'album' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
               :aria-selected="activeView === 'album'"
-              @click="setView('album')">
-              <span aria-hidden="true">🖼️</span> 班級相簿</button>
+              @click="setView('album')">班級相簿</button>
           </div>
 
           <div class="grid grid-cols-2 gap-3" x-show="activeView === 'info'">
@@ -510,7 +508,7 @@
                 target="_blank"
               >
                 <div class="flex items-center gap-3">
-                  <span class="text-2xl">📁</span>
+                  <svg class="w-6 h-6 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                   <span class="font-semibold" x-text="album.cls"></span>
                 </div>
                 <span class="text-sm font-semibold text-teal-700">開啟 →</span>
@@ -525,7 +523,7 @@
                 target="_blank"
               >
                 <div class="flex items-center gap-3">
-                  <span class="text-2xl">🗂️</span>
+                  <svg class="w-6 h-6 text-teal-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                   <div>
                     <p class="font-bold text-teal-900">總資料夾</p>
                     <p class="text-xs text-teal-700">老師 / 領隊專用</p>
