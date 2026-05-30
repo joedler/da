@@ -182,6 +182,10 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
       }));
     }
 
+    if (action === "albums") {
+      return json_(handleAlbums_());
+    }
+
     return json_({ ok: false, error: "UNKNOWN_ACTION" });
   } catch (error) {
     return jsonError_(error);
@@ -1422,4 +1426,32 @@ function jsonError_(error: unknown): GoogleAppsScript.Content.TextOutput {
     error: "SERVER_ERROR",
     message,
   });
+}
+
+/**
+ * 讀取試算表 albums 分頁，回傳所有班級相簿連結
+ * 試算表格式：A欄=班級, B欄=資料夾連結（第1列為標題）
+ */
+function handleAlbums_(): ApiResponse {
+  const ss = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
+  const sheet = ss.getSheetByName("albums");
+
+  if (!sheet) {
+    return { ok: false, error: "SHEET_NOT_FOUND", message: "找不到 albums 分頁" };
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return { ok: true, albums: [] };
+  }
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 2).getValues() as string[][];
+  const albums = data
+    .filter((row) => row[0] && row[1])
+    .map((row) => ({
+      cls: String(row[0]).trim(),
+      url: String(row[1]).trim(),
+    }));
+
+  return { ok: true, albums };
 }
