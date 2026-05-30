@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【管理指南】團旅小幫手管理端手冊</title>
+  <!-- Google Fonts Inter & Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4338ca;
+      --primary-hover: #3730a3;
+      --primary-light: #e0e7ff;
+      --accent: #6366f1;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-700: #b45309;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--slate-50);
+      color: var(--slate-800);
+      line-height: 1.6;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    /* Premium Header */
+    header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 40px 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 50%;
+      bottom: -80px;
+      right: -80px;
+    }
+
+    .badge {
+      display: inline-block;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 300;
+    }
+
+    /* Sections */
+    section {
+      background-color: white;
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--slate-100);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid var(--slate-100);
+      padding-bottom: 10px;
+    }
+
+    .section-title svg {
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* Alert Box */
+    .alert-card {
+      background-color: var(--amber-50);
+      border-left: 4px solid var(--amber-700);
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .alert-card svg {
+      color: var(--amber-700);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .alert-card p {
+      font-size: 0.9rem;
+      color: var(--amber-700);
+      font-weight: 500;
+    }
+
+    /* Steps cards */
+    .admin-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .admin-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-card {
+      background-color: var(--slate-50);
+      border: 1px solid var(--slate-100);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .step-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px auto;
+    }
+
+    .step-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 8px;
+    }
+
+    .step-card p {
+      font-size: 0.8rem;
+      color: var(--slate-700);
+      line-height: 1.5;
+    }
+
+    /* Features Grid */
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px;
+      border-radius: 10px;
+      background-color: var(--slate-50);
+    }
+
+    .feature-icon {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feature-content h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 4px;
+    }
+
+    .feature-content p {
+      font-size: 0.85rem;
+      color: var(--slate-700);
+      line-height: 1.6;
+    }
+
+    /* Spreadsheet Table Design */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 12px;
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #0f766e; /* Matches Google Sheet layout primary */
+      color: white;
+      padding: 12px;
+      font-weight: 700;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--slate-200);
+      background-color: white;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .cell-highlight {
+      background-color: #fef08a;
+      font-weight: 700;
+      color: #854d0e;
+    }
+
+    .sheet-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background-color: var(--slate-200);
+      color: var(--slate-800);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* Scenario List */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .scenario-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scenario-card {
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 20px;
+      transition: var(--transition);
+    }
+
+    .scenario-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .scenario-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background-color: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 100px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+
+    .scenario-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 8px;
+    }
+
+    .scenario-card p {
+      font-size: 0.8rem;
+      color: var(--slate-700);
+      line-height: 1.5;
+    }
+
+    /* Printable Styling */
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+        padding-bottom: 0;
+      }
+      .container {
+        padding: 0;
+        max-width: 100%;
+      }
+      header {
+        background: none !important;
+        color: black !important;
+        border-radius: 0;
+        padding: 0 0 20px 0;
+        border-bottom: 2px solid black;
+        box-shadow: none !important;
+        margin-bottom: 30px;
+      }
+      header::after {
+        display: none;
+      }
+      .badge {
+        border: 1px solid black;
+        color: black;
+        background: none;
+      }
+      header p {
+        color: #444 !important;
+      }
+      section {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 35px;
+        page-break-inside: avoid;
+      }
+      .alert-card {
+        display: none !important;
+      }
+      .step-card {
+        background: none;
+        border: 1px solid #ccc;
+      }
+      .feature-item {
+        background: none;
+        border: 1px solid #eee;
+      }
+      .feature-icon {
+        background: none;
+        border: 1px solid #ccc;
+      }
+      th {
+        background-color: #555 !important;
+        color: white !important;
+      }
+      td {
+        border: 1px solid #ccc;
+      }
+      .scenario-card {
+        background: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <header>
+      <div class="badge">旅行社與領隊版手冊</div>
+      <h1>團旅小幫手後台管理手冊</h1>
+      <p>現場領隊權限綁定、即時點名與雲端名單維護指南</p>
+    </header>
+
+    <!-- Disclaimer Alert -->
+    <div class="alert-card">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <p>現場如遇大範圍資料異動，直接在 Google Sheets 上修改即可即時更新。本系統設有防併發鎖，多位領隊在車上與後台同時讀寫，亦不會造成資料錯亂，請安心操作。</p>
+    </div>
+
+    <!-- Admin Binding Steps -->
+    <section>
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><key xmlns="http://www.w3.org/2000/svg" d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5l-3 3"/></svg>
+        領隊權限綁定三步驟
+      </h2>
+      <div class="admin-steps">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h4>對話視窗輸入關鍵字</h4>
+          <p>對 LINE 官方帳號對話視窗輸入 <strong>「總覽」</strong> 或 <strong>「管理」</strong>，Bot 隨即彈出專屬領隊後台 Flex 點擊卡片。</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h4>姓名與手機末三碼驗證</h4>
+          <p>點擊「開啟總覽」，在跳出的授權網頁輸入「姓名」與「手機末三碼」，系統將比對 admins 權限表完成驗證。</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h4>鎖定 LINE 帳號自動登入</h4>
+          <p>驗證完成後，此 LINE 帳號已永久綁定領隊身分。之後任何時候點開 LINE 均可免密碼一秒開啟後台管理。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin Features -->
+    <section>
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        領隊總覽後台核心功能
+      </h2>
+      <div class="features-list">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h14z"></path><circle cx="7.5" cy="17.5" r="2.5"></circle><circle cx="16.5" cy="17.5" r="2.5"></circle></svg>
+          </div>
+          <div class="feature-content">
+            <h4>即時分車清查點名</h4>
+            <p><strong>「分車分頁」</strong> 會自動以領隊所在的「服務車次」（如 A 車）置頂顯示。名單中會直接顯示學生和老師是否已經完成 **「LINE 綁定」**。未綁定者系統會標示為「未綁定」，方便隨車領隊在車上口頭宣導及催促綁定。</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line><line x1="12" y1="8" x2="12" y2="16"></line></svg>
+          </div>
+          <div class="feature-content">
+            <h4>全局即時資料模糊搜尋</h4>
+            <p>管理頁面上方設有 **「智能搜尋欄」**。輸入姓名、班級、車次、房號、桌號甚至是「素食」等關鍵字，名單隨即毫秒級縮小篩選範圍，方便領隊現場快速答覆團員疑問。</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="feature-content">
+            <h4>桌次與素食對照</h4>
+            <p><strong>「桌次分頁」</strong> 以桌號排序，列出每一桌的團員名字。若團員註記為素食，名字後方會自動帶上紅色的 **「（素）」** 標誌，方便餐廳上菜與領隊核對人數。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spreadsheet Guide -->
+    <section>
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        雲端 Google Sheets 異動與維護指南
+      </h2>
+      <p style="font-size: 0.9rem; color: var(--slate-700); margin-bottom: 12px;">旅行社後台窗口與管理者可隨時編輯雲端 Sheets 表單，資料結構如下：</p>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>工作表 Tab</th>
+              <th>主要修改欄位</th>
+              <th>說明與維護規範</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="sheet-badge">people</span></td>
+              <td class="cell-highlight">firstDayRoomNo<br>secondDayRoomNo</td>
+              <td>當飯店名單出來時，直接在此表格填入兩晚房號。<br><strong>※ 欄位格式請維持原文字，切勿刪減欄位。</strong></td>
+            </tr>
+            <tr>
+              <td><span class="sheet-badge">settings</span></td>
+              <td class="cell-highlight">room_number_status</td>
+              <td>房號分配完成後，請將本欄位的 `value` 值從 <strong>「尚未公告」</strong> 改為 <strong>「已公告」</strong>，學生端才會秀出確切房號。</td>
+            </tr>
+            <tr>
+              <td><span class="sheet-badge">contacts</span></td>
+              <td>電話、備註</td>
+              <td>隨車領隊若有臨時更換，直接修改此表內的領隊姓名與電話即可，名單會立刻更新。</td>
+            </tr>
+            <tr>
+              <td><span class="sheet-badge">itinerary</span></td>
+              <td>地點、集合時間</td>
+              <td>若遇到天候影響行程，修改此處可即時更新師生 LINE 中的時間軸與注意事項。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Scenario Troubleshooting -->
+    <section>
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+        現場常見突發狀況應變
+      </h2>
+      
+      <div class="scenario-grid">
+        
+        <div class="scenario-card">
+          <div class="scenario-tag">狀況一</div>
+          <h4>學生因個人因素臨時更換房間</h4>
+          <p><strong>領隊處理方式</strong>：<br>直接用手機瀏覽器或電腦開啟雲端 Google Sheets 的 `people` 工作表，搜尋該名學生姓名，並修改其 `roomGroup` (房間編組) 與 `firstDayRoomNo` / `secondDayRoomNo` (房號)。修改完成後，請學生再次打開 LINE 點選「我的資訊」，即會一秒顯示新房間與新室友！</p>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-tag">狀況二</div>
+          <h4>團員反映「老師，我被綁錯了」</h4>
+          <p><strong>領隊處理方式</strong>：<br>1. 可指導該師生直接點進系統的「我的資訊」分頁，拉到最底點選「解除綁定」。<br>2. 或者，領隊也可以在雲端 Sheets 的 `people` 中搜尋其姓名，把該列的 `LINE使用者ID` 與 `綁定時間` 刪除（留白），即可完成強制解除綁定，讓團員重做驗證。</p>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-tag">狀況三</div>
+          <h4>飯店臨時通知某幾間房號更動</h4>
+          <p><strong>領隊處理方式</strong>：<br>在 Sheets 的 `people` 找到相對應的房間編組（例如男1），將受影響學生的房號格直接改掉。不影響其他未更動的人，資訊為實時動態載入。</p>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-tag">狀況四</div>
+          <h4>隨隊老師想看整輛車的素食名單</h4>
+          <p><strong>領隊處理方式</strong>：<br>領隊直接在自己的 LINE 點選「開啟總覽」，進入後點選右上角的搜尋放大鏡，輸入例如 **「素」** 或 **「桌次」**，就可以直接將手機拿給隨車老師看一秒篩選後的名單，快速又專業！</p>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
