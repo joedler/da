@@ -250,7 +250,7 @@ function handleLineWebhook_(body: ApiPayload): void {
           body: `${admin.name} ${admin.role || ""}`.trim(),
           buttonLabel: "開啟總覽",
           uri: buildLiffUrl_("overview"),
-          accentColor: "#0F766E",
+          accentColor: "#2A7DE1",
         }));
       } else {
         replyText_(event.replyToken, "此功能限領隊或管理者使用。若你是工作人員，請開啟領隊總覽並完成首次授權。");
@@ -265,7 +265,7 @@ function handleLineWebhook_(body: ApiPayload): void {
         body: "查看每日集合、景點、用餐與住宿安排。",
         buttonLabel: "開啟行程表",
         uri: buildLiffUrl_("itinerary"),
-        accentColor: "#1D4ED8",
+        accentColor: "#FF7A59",
       }));
       return;
     }
@@ -277,7 +277,7 @@ function handleLineWebhook_(body: ApiPayload): void {
         body: "開啟後會依你的車次顯示相關聯絡窗口。",
         buttonLabel: "開啟聯絡資訊",
         uri: buildLiffUrl_("contacts"),
-        accentColor: "#7C3AED",
+        accentColor: "#FF8A00",
       }));
       return;
     }
@@ -371,8 +371,11 @@ function buildWelcomeFlex_(): Record<string, unknown> {
     header: {
       type: "box",
       layout: "vertical",
-      paddingAll: "20px",
-      backgroundColor: "#0F766E",
+      paddingTop: "24px",
+      paddingBottom: "20px",
+      paddingStart: "20px",
+      paddingEnd: "20px",
+      backgroundColor: "#2A7DE1",
       contents: [
         { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
         { type: "text", text: "歡迎使用", color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
@@ -402,7 +405,7 @@ function buildWelcomeFlex_(): Record<string, unknown> {
         {
           type: "button",
           style: "primary",
-          color: "#0F766E",
+          color: "#2A7DE1",
           action: {
             type: "uri",
             label: "開始查詢",
@@ -478,9 +481,11 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
           margin: "sm",
         },
       ],
-      paddingAll: "20px",
-      paddingBottom: "24px",
-      backgroundColor: "#0F766E",
+      paddingTop: "16px",
+      paddingBottom: "12px",
+      paddingStart: "16px",
+      paddingEnd: "16px",
+      backgroundColor: "#2A7DE1",
     },
     body: {
       type: "box",
@@ -499,8 +504,8 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
         infoRow("同房人員", p.roomMembers, { wrap: true }),
         sep,
         hasVegetarian
-          ? infoRow("素食", p.vegetarian, { valueColor: "#047857", bold: true })
-          : infoRow("素食", "無", { valueColor: "#94A3B8" }),
+          ? infoRow("素食", p.vegetarian, { valueColor: "#00BFA5", bold: true })
+          : infoRow("素食", "無", { valueColor: "#888893" }),
       ],
       paddingAll: "0px",
       spacing: "none",
@@ -514,7 +519,7 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
         {
           type: "button",
           style: "primary",
-          color: "#0F766E",
+          color: "#2A7DE1",
           action: { type: "uri", label: "我的資訊", uri: buildLiffUrl_("info") },
         },
         {
