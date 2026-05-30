@@ -286,7 +286,7 @@
           <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
             <p class="text-sm text-slate-500">已綁定</p>
             <h2 class="mt-1 text-2xl font-bold" x-text="profile.name"></h2>
-            <p class="mt-1 text-sm text-slate-600" x-text="profile.roleClass"></p>
+            <p class="mt-1 text-sm text-slate-600" x-text="profile.roleClass || profile.type || '已綁定使用者'"></p>
           </div>
 
           <div class="grid grid-cols-3 gap-2 rounded-md bg-slate-100 p-1">

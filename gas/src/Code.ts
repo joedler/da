@@ -239,6 +239,48 @@ function handleLineWebhook_(body: ApiPayload): void {
     if (event.message?.type !== "text") return;
 
     const userId = normalize_(event.source?.userId || "");
+    const text = normalize_(event.message.text).toLowerCase();
+
+    if (isOverviewCommand_(text)) {
+      const admin = getAuthorizedAdmin_(userId);
+      if (admin) {
+        replyFlexMessage_(event.replyToken, "領隊總覽", buildLinkFlex_({
+          title: "領隊總覽",
+          subtitle: "查看分車、班級、房號、桌次與聯絡資訊",
+          body: `${admin.name} ${admin.role || ""}`.trim(),
+          buttonLabel: "開啟總覽",
+          uri: buildLiffUrl_("overview"),
+          accentColor: "#0F766E",
+        }));
+      } else {
+        replyText_(event.replyToken, "此功能限領隊或管理者使用。若你是工作人員，請開啟領隊總覽並完成首次授權。");
+      }
+      return;
+    }
+
+    if (isItineraryCommand_(text)) {
+      replyFlexMessage_(event.replyToken, "行程表", buildLinkFlex_({
+        title: "行程表",
+        subtitle: "三天兩夜時間軸",
+        body: "查看每日集合、景點、用餐與住宿安排。",
+        buttonLabel: "開啟行程表",
+        uri: buildLiffUrl_("itinerary"),
+        accentColor: "#1D4ED8",
+      }));
+      return;
+    }
+
+    if (isContactsCommand_(text)) {
+      replyFlexMessage_(event.replyToken, "聯絡資訊", buildLinkFlex_({
+        title: "聯絡資訊",
+        subtitle: "領隊、班導、護理師與旅行社窗口",
+        body: "開啟後會依你的車次顯示相關聯絡窗口。",
+        buttonLabel: "開啟聯絡資訊",
+        uri: buildLiffUrl_("contacts"),
+        accentColor: "#7C3AED",
+      }));
+      return;
+    }
 
     // 查詢指令：輸入「查詢」或任意文字都觸發查詢
     const result = getMyInfo_(userId);
@@ -253,6 +295,18 @@ function handleLineWebhook_(body: ApiPayload): void {
   });
 }
 
+function isOverviewCommand_(text: string): boolean {
+  return ["總覽", "管理", "overview", "admin"].some((keyword) => text.includes(keyword));
+}
+
+function isItineraryCommand_(text: string): boolean {
+  return ["行程", "行程表", "itinerary", "schedule"].some((keyword) => text.includes(keyword));
+}
+
+function isContactsCommand_(text: string): boolean {
+  return ["聯絡", "連絡", "電話", "窗口", "contacts", "contact"].some((keyword) => text.includes(keyword));
+}
+
 function buildBotIntroMessage_(): string {
   const liffUrl = getProperty_("LIFF_URL", "");
   const activityName = getProperty_("ACTIVITY_NAME", "本次團體旅遊");
@@ -265,6 +319,62 @@ function buildBotIntroMessage_(): string {
     ``,
     `本帳號為資訊查詢工具，若資料有誤或需人工協助，請聯繫領隊或承辦人員。`,
   ].join("\n");
+}
+
+function buildLiffUrl_(view: string): string {
+  const liffUrl = getProperty_("LIFF_URL", "");
+  if (!liffUrl) return "";
+  return `${liffUrl}${liffUrl.includes("?") ? "&" : "?"}view=${encodeURIComponent(view)}`;
+}
+
+function buildLinkFlex_(options: {
+  title: string;
+  subtitle: string;
+  body: string;
+  buttonLabel: string;
+  uri: string;
+  accentColor: string;
+}): Record<string, unknown> {
+  return {
+    type: "bubble",
+    size: "mega",
+    header: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "20px",
+      backgroundColor: options.accentColor,
+      contents: [
+        { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
+        { type: "text", text: options.title, color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
+        { type: "text", text: options.subtitle, color: "#ffffffcc", size: "sm", wrap: true, margin: "sm" },
+      ],
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "20px",
+      contents: [
+        { type: "text", text: options.body, color: "#334155", size: "sm", wrap: true },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      paddingAll: "16px",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: options.accentColor,
+          action: {
+            type: "uri",
+            label: options.buttonLabel,
+            uri: options.uri,
+          },
+        },
+      ],
+    },
+  };
 }
 
 function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
@@ -283,14 +393,14 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
         text: label,
         color: "#888888",
         size: "sm",
-        flex: 3,
+        flex: 4,
       },
       {
         type: "text",
         text: value || "尚未公告",
         color: opts?.valueColor ?? (value ? "#222222" : "#AAAAAA"),
         size: "sm",
-        flex: 4,
+        flex: 5,
         align: "end",
         wrap: opts?.wrap ?? false,
         weight: opts?.bold ? "bold" : "regular",
@@ -302,7 +412,8 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
     paddingEnd: "16px",
   });
 
-  const sep: Record<string, unknown> = { type: "separator", color: "#F0F0F0" };
+  const sep: Record<string, unknown> = { type: "separator", color: "#E2E8F0" };
+  const roleText = p.roleClass || p.type || "旅客";
 
   return {
     type: "bubble",
@@ -311,51 +422,66 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
       type: "box",
       layout: "vertical",
       contents: [
-        { type: "text", text: "🎓 畢旅小幫手", color: "#ffffff99", size: "xs" },
-        { type: "text", text: p.name, color: "#ffffff", size: "xxl", weight: "bold" },
+        { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
+        { type: "text", text: p.name, color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
         {
           type: "text",
-          text: [p.roleClass, p.type].filter(Boolean).join("・"),
-          color: "#ffffffbb",
+          text: [roleText, p.bus].filter(Boolean).join("｜"),
+          color: "#ffffffcc",
           size: "sm",
+          margin: "sm",
         },
       ],
       paddingAll: "20px",
       paddingBottom: "24px",
-      background: {
-        type: "linearGradient",
-        angle: "135deg",
-        startColor: "#FF6B35",
-        endColor: "#C0392B",
-      },
+      backgroundColor: "#0F766E",
     },
     body: {
       type: "box",
       layout: "vertical",
       contents: [
-        infoRow("🚌 車次", p.bus),
+        infoRow("車次", p.bus, { bold: true }),
         sep,
-        infoRow("📞 領隊", [p.busLeaderName, p.busLeaderPhone].filter(Boolean).join(" "), { wrap: true }),
+        infoRow("領隊", [p.busLeaderName, p.busLeaderPhone].filter(Boolean).join(" "), { wrap: true }),
         sep,
-        infoRow("🍽️ 桌號", p.tableNo),
+        infoRow("桌號", p.tableNo),
         sep,
-        infoRow("🏨 第一天房號", p.firstDayRoomNo || p.roomNo),
+        infoRow("第一天房號", p.firstDayRoomNo || p.roomNo),
         sep,
-        infoRow("🏨 第二天房號", p.secondDayRoomNo || p.roomNo),
+        infoRow("第二天房號", p.secondDayRoomNo || p.roomNo),
         sep,
-        infoRow("👥 同房人員", p.roomMembers, { wrap: true }),
+        infoRow("同房人員", p.roomMembers, { wrap: true }),
         sep,
         hasVegetarian
-          ? infoRow("🥗 素食", "✓ " + p.vegetarian, { valueColor: "#27AE60", bold: true })
-          : infoRow("🥗 素食", "無", { valueColor: "#AAAAAA" }),
+          ? infoRow("素食", p.vegetarian, { valueColor: "#047857", bold: true })
+          : infoRow("素食", "無", { valueColor: "#94A3B8" }),
       ],
       paddingAll: "0px",
       spacing: "none",
     },
+    footer: {
+      type: "box",
+      layout: "horizontal",
+      spacing: "sm",
+      paddingAll: "16px",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: "#0F766E",
+          action: { type: "uri", label: "我的資訊", uri: buildLiffUrl_("info") },
+        },
+        {
+          type: "button",
+          style: "secondary",
+          action: { type: "uri", label: "行程表", uri: buildLiffUrl_("itinerary") },
+        },
+      ],
+    },
   };
 }
 
-function replyFlex_(replyToken: string, p: ApiProfile): void {
+function replyFlexMessage_(replyToken: string, altText: string, contents: Record<string, unknown>): void {
   const channelAccessToken = getProperty_("LINE_CHANNEL_ACCESS_TOKEN", "");
   if (!channelAccessToken) {
     Logger.log("LINE flex reply skipped: LINE_CHANNEL_ACCESS_TOKEN is empty.");
@@ -371,8 +497,8 @@ function replyFlex_(replyToken: string, p: ApiProfile): void {
       messages: [
         {
           type: "flex",
-          altText: `${p.name} 的旅遊資訊`,
-          contents: buildProfileFlex_(p),
+          altText,
+          contents,
         },
       ],
     }),
@@ -380,6 +506,10 @@ function replyFlex_(replyToken: string, p: ApiProfile): void {
   });
   Logger.log(`LINE flex reply status: ${response.getResponseCode()}`);
   Logger.log(`LINE flex reply body: ${response.getContentText()}`);
+}
+
+function replyFlex_(replyToken: string, p: ApiProfile): void {
+  replyFlexMessage_(replyToken, `${p.name} 的旅遊資訊`, buildProfileFlex_(p));
 }
 
 function replyText_(replyToken: string, text: string): void {
@@ -666,7 +796,7 @@ function buildProfile_(row: SheetRow, header: HeaderMap): ApiProfile {
     personId: read_(row, header, "person_id"),
     type: read_(row, header, "類別"),
     name: read_(row, header, "姓名"),
-    roleClass: read_(row, header, "班級或職稱"),
+    roleClass: readRoleClass_(row, header),
     bus,
     tableNo: read_(row, header, "桌號"),
     busLeaderName: busLeader?.name || "",
@@ -700,7 +830,7 @@ function buildOverviewPerson_(
   return {
     name: read_(row, header, "姓名"),
     type: read_(row, header, "類別"),
-    roleClass: read_(row, header, "班級或職稱"),
+    roleClass: readRoleClass_(row, header),
     bus: read_(row, header, "車次"),
     tableNo: read_(row, header, "桌號"),
     roomGroup,
@@ -710,6 +840,14 @@ function buildOverviewPerson_(
     secondDayRoomNo: readOptional_(row, header, "第二天房號") || assignment?.secondDayRoomNo || legacyRoomNo,
     bound: Boolean(read_(row, header, "LINE使用者ID")),
   };
+}
+
+function readRoleClass_(row: SheetRow, header: HeaderMap): string {
+  return readOptional_(row, header, "班級或職稱") ||
+    readOptional_(row, header, "職稱/班級") ||
+    readOptional_(row, header, "班級") ||
+    readOptional_(row, header, "職稱") ||
+    readOptional_(row, header, "備註");
 }
 
 function buildOverviewStats_(people: OverviewPerson[]): Record<string, unknown> {
