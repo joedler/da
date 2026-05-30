@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 
 from openpyxl import load_workbook
@@ -6,8 +7,10 @@ from openpyxl import load_workbook
 
 OUT = Path("outputs/contacts.csv")
 SYSTEM_DATA = Path("outputs/system_data.xlsx")
+PRIVATE_INFO = Path("outputs/private_info.json")
 
-BUS_LEADERS = [
+# Default mock data for public repo / fallback
+DEFAULT_BUS_LEADERS = [
     ["旅行社領隊", "領隊A", "A車", "0900000001", "", ""],
     ["旅行社領隊", "領隊B", "B車", "0900000002", "", ""],
     ["旅行社領隊", "領隊C", "C車", "0900000003", "", ""],
@@ -15,6 +18,18 @@ BUS_LEADERS = [
     ["旅行社領隊", "領隊E", "E車", "0900000005", "", ""],
     ["旅行社領隊", "領隊F", "F車", "0900000006", "", ""],
 ]
+DEFAULT_AGENCY_CONTACT = ["旅行社窗口", "聯絡窗口", "", "0900000000", "", "旅行社窗口"]
+
+
+def load_private_info() -> tuple[list[list[str]], list[str]]:
+    if PRIVATE_INFO.exists():
+        try:
+            with PRIVATE_INFO.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("bus_leaders", DEFAULT_BUS_LEADERS), data.get("agency_contact", DEFAULT_AGENCY_CONTACT)
+        except Exception:
+            pass
+    return DEFAULT_BUS_LEADERS, DEFAULT_AGENCY_CONTACT
 
 
 def school_contacts() -> list[list[str]]:
@@ -44,15 +59,17 @@ def school_contacts() -> list[list[str]]:
 
 
 def main() -> None:
+    bus_leaders, agency_contact = load_private_info()
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with OUT.open("w", encoding="utf-8-sig", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["類型", "姓名", "服務車次", "電話", "LINE或其他聯絡方式", "備註"])
-        writer.writerows(BUS_LEADERS)
+        writer.writerows(bus_leaders)
         writer.writerows(school_contacts())
-        writer.writerow(["旅行社窗口", "聯絡窗口", "", "0900000000", "", "旅行社窗口"])
+        writer.writerow(agency_contact)
     print(OUT.resolve())
 
 
 if __name__ == "__main__":
     main()
+
