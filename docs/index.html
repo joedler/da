@@ -455,17 +455,20 @@
             <template x-if="classAlbumUrl">
               <div class="space-y-3">
                 <a
-                  class="block w-full rounded-md bg-teal-700 px-4 py-4 text-center font-bold text-white text-lg shadow"
+                  class="block w-full rounded-md border border-teal-200 bg-teal-50 hover:bg-teal-100 active:scale-[0.98] transition-all px-4 py-3.5 text-center font-bold text-teal-700 text-lg shadow-sm flex items-center justify-center gap-2"
                   :href="classAlbumUrl"
                   target="_blank"
                 >
-                  📸 開啟 Google Drive 上傳照片
+                  <svg class="w-5 h-5 shrink-0 text-teal-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                  開啟 Google Drive 上傳照片
                 </a>
-                <div class="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs leading-6 text-amber-800">
-                  <p>📌 上傳前請注意：</p>
+                <div class="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm leading-6 text-amber-900">
+                  <p class="flex items-center gap-1.5 font-bold">
+                    <svg class="w-4 h-4 shrink-0 text-amber-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    上傳前請注意：
+                  </p>
                   <p>・需登入 Google 帳號（個人帳號即可）</p>
                   <p>・建議照片命名：<strong>姓名_地點</strong>，例如 王小明_墾丁大街</p>
-                  <p>・請勿上傳與旅遊無關的檔案</p>
                 </div>
               </div>
             </template>
@@ -637,6 +640,15 @@
                   this.albumsLoaded = true;
                 }
               }
+
+              // 終極 0 秒秒開：優先讀取並渲染本機使用者身分快取
+              const cachedProfile = localStorage.getItem("grad_trip_profile");
+              if (cachedProfile) {
+                const profile = JSON.parse(cachedProfile);
+                this.profile = profile;
+                this.state = "bound";
+                this.classAlbumUrl = this.resolveAlbumUrl(profile);
+              }
             } catch (e) {
               console.warn("[loadCachedData] 讀取本機快取失敗：", e);
             }
@@ -709,6 +721,11 @@
               // 設定該使用者對應的班級相簿連結
               this.classAlbumUrl = this.resolveAlbumUrl(result.profile);
               this.setView(this.requestedView());
+
+              // 快取使用者個人資訊，實現 0 秒秒開
+              try {
+                localStorage.setItem("grad_trip_profile", JSON.stringify(result.profile));
+              } catch (e) {}
               return;
             }
 
@@ -819,6 +836,11 @@
               this.message = "";
               // #3：首次綁定也要設定相簿連結（不走 loadMe，需在此補設）
               this.classAlbumUrl = this.resolveAlbumUrl(result.profile);
+
+              // 首次綁定成功，寫入個人資訊快取
+              try {
+                localStorage.setItem("grad_trip_profile", JSON.stringify(result.profile));
+              } catch (e) {}
             } catch (error) {
               this.message = error.message || "驗證失敗，請稍後再試。";
             } finally {
@@ -840,6 +862,11 @@
               this.profile = null;
               this.state = "unbound";
               this.message = "已解除綁定，可重新驗證。";
+
+              // 解除綁定時清除個人快取
+              try {
+                localStorage.removeItem("grad_trip_profile");
+              } catch (e) {}
             } catch (error) {
               this.message = error.message || "解除綁定失敗。";
             } finally {
