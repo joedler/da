@@ -186,6 +186,10 @@ function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextO
       return json_(handleAlbums_());
     }
 
+    if (action === "initData") {
+      return json_(getInitData_());
+    }
+
     return json_({ ok: false, error: "UNKNOWN_ACTION" });
   } catch (error) {
     return jsonError_(error);
@@ -1454,4 +1458,37 @@ function handleAlbums_(): ApiResponse {
     }));
 
   return { ok: true, albums };
+}
+
+/**
+ * 合併讀取設定、行程及相簿，並使用 CacheService 提供 10 分鐘快取優化效能
+ */
+function getInitData_(): ApiResponse {
+  const cache = CacheService.getScriptCache();
+  const cacheKey = "initData_v1";
+  
+  try {
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached) as ApiResponse;
+    }
+  } catch (err) {
+    Logger.log("讀取 initData 快取失敗: " + err);
+  }
+
+  const data: ApiResponse = {
+    ok: true,
+    settings: getAppSettings_(),
+    itinerary: getItinerary_(),
+    albums: handleAlbums_().albums || [],
+  };
+
+  try {
+    // 寫入快取，保存 600 秒 (10 分鐘)
+    cache.put(cacheKey, JSON.stringify(data), 600);
+  } catch (err) {
+    Logger.log("寫入 initData 快取失敗: " + err);
+  }
+
+  return data;
 }

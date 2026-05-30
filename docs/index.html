@@ -597,12 +597,13 @@
             try {
               this.ensureConfig();
               
-              // 效能優化：並行載入無相依性的資料與初始化 LIFF，減少多重 API 串行等待時間
+              // 0秒加載：優先加載本機 localStorage 快取渲染 UI
+              this.loadCachedData();
+              
+              // 效能大升級：背景並發執行 LIFF 初始化與單次 API 背景資料同步，使用者完全不被阻塞！
               await Promise.all([
-                this.loadSettings(),
-                this.loadItinerary(),
-                this.loadAlbums(),
                 this.initLiff(),
+                this.syncInitData(),
               ]);
 
               if (this.requestedView() === "overview") {
@@ -616,19 +617,63 @@
             }
           },
 
-          async loadSettings() {
-            const result = await this.callApi({ action: "settings" });
-            if (result.ok && result.settings) {
-              this.settings = result.settings;
-              this.config.activityName = result.settings.activityName || this.config.activityName;
-              document.title = this.config.activityName;
+          loadCachedData() {
+            try {
+              const cached = localStorage.getItem("grad_trip_init_data");
+              if (cached) {
+                const data = JSON.parse(cached);
+                if (data.settings) {
+                  this.settings = data.settings;
+                  this.config.activityName = data.settings.activityName || this.config.activityName;
+                  document.title = this.config.activityName;
+                }
+                if (Array.isArray(data.itinerary)) {
+                  this.itinerary = data.itinerary;
+                }
+                if (Array.isArray(data.albums)) {
+                  this.albums = data.albums;
+                  const master = data.albums.find(a => a.cls === "總資料夾");
+                  this.masterAlbumUrl = master ? master.url : "";
+                  this.albumsLoaded = true;
+                }
+              }
+            } catch (e) {
+              console.warn("[loadCachedData] 讀取本機快取失敗：", e);
             }
           },
 
-          async loadItinerary() {
-            const result = await this.callApi({ action: "itinerary" });
-            if (result.ok && Array.isArray(result.itinerary)) {
-              this.itinerary = result.itinerary;
+          async syncInitData() {
+            try {
+              const result = await this.callApi({ action: "initData" });
+              if (result.ok) {
+                if (result.settings) {
+                  this.settings = result.settings;
+                  this.config.activityName = result.settings.activityName || this.config.activityName;
+                  document.title = this.config.activityName;
+                }
+                if (Array.isArray(result.itinerary)) {
+                  this.itinerary = result.itinerary;
+                }
+                if (Array.isArray(result.albums)) {
+                  this.albums = result.albums;
+                  const master = result.albums.find(a => a.cls === "總資料夾");
+                  this.masterAlbumUrl = master ? master.url : "";
+                }
+                this.albumsLoaded = true;
+
+                // 寫入快取，供下一次秒開使用
+                localStorage.setItem("grad_trip_init_data", JSON.stringify({
+                  settings: result.settings,
+                  itinerary: result.itinerary,
+                  albums: result.albums
+                }));
+              }
+            } catch (err) {
+              console.warn("[syncInitData] 背景同步最新資料失敗：", err);
+              // 若完全沒有快取過，且 API 也掛了，仍要關閉載入狀態
+              if (!this.albumsLoaded) {
+                this.albumsLoaded = true;
+              }
             }
           },
 
@@ -802,23 +847,7 @@
             }
           },
 
-          async loadAlbums() {
-            // 失敗不中斷主流程，但記錄錯誤（#4/#6）
-            try {
-              const result = await this.callApi({ action: "albums" });
-              if (result.ok && Array.isArray(result.albums)) {
-                this.albums = result.albums;
-                // 快取總資料夾連結，避免重複 find()（#7）
-                const master = result.albums.find(a => a.cls === "總資料夾");
-                this.masterAlbumUrl = master ? master.url : "";
-              }
-            } catch (err) {
-              console.warn("[loadAlbums] 無法載入相簿連結：", err);
-            } finally {
-              // 無論成功或失敗都標記已完成，讓 UI 正確顯示（#1）
-              this.albumsLoaded = true;
-            }
-          },
+          // 備註：舊的 loadAlbums 已整合至 syncInitData() 中統一加載
 
           resolveAlbumUrl(profile) {
             if (!profile) return "";
