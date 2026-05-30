@@ -461,6 +461,10 @@
       <div class="badge">旅行社與領隊版手冊</div>
       <h1>團旅小幫手後台管理手冊</h1>
       <p>現場領隊權限綁定、即時點名與雲端名單維護指南</p>
+      <a href="https://liff.line.me/2010211676-aN5CpjP8?admin=1" target="_blank" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:white;color:#312e81;font-weight:700;font-size:1rem;padding:14px 24px;border-radius:12px;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:all 0.2s;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        開啟後台總覽（領隊專用）
+      </a>
     </header>
 
     <!-- Disclaimer Alert -->
@@ -532,7 +536,7 @@ https://liff.line.me/2010211676-aN5CpjP8
           </div>
           <div class="feature-content">
             <h4>即時分車清查點名</h4>
-            <p><strong>「分車分頁」</strong> 會自動以領隊所在的「服務車次」（如 A 車）置頂顯示。名單中會直接顯示學生和老師是否已經完成 **「LINE 綁定」**。未綁定者系統會標示為「未綁定」，方便隨車領隊在車上口頭宣導及催促綁定。</p>
+            <p><strong>「分車分頁」</strong> 會自動以領隊所在的「服務車次」（如 A 車）置頂顯示。名單中會直接顯示學生和老師是否已經完成<strong>「 LINE 綁定」</strong>。未綁定者系統會標示為「未綁定」，方便隨車領隊在車上口頭宣導及催促綁定。</p>
           </div>
         </div>
         <div class="feature-item">
@@ -541,7 +545,7 @@ https://liff.line.me/2010211676-aN5CpjP8
           </div>
           <div class="feature-content">
             <h4>全局即時資料模糊搜尋</h4>
-            <p>管理頁面上方設有 **「智能搜尋欄」**。輸入姓名、班級、車次、房號、桌號甚至是「素食」等關鍵字，名單隨即毫秒級縮小篩選範圍，方便領隊現場快速答覆團員疑問。</p>
+            <p>管理頁面上方設有<strong>「智能搜尋欄」</strong>。輸入姓名、班級、車次、房號、桌號甚至是「素食」等關鍵字，名單隨即毫秒級縮小篩選範圍，方便領隊現場快速答覆團員疑問。</p>
           </div>
         </div>
         <div class="feature-item">
@@ -550,7 +554,7 @@ https://liff.line.me/2010211676-aN5CpjP8
           </div>
           <div class="feature-content">
             <h4>桌次與素食對照</h4>
-            <p><strong>「桌次分頁」</strong> 以桌號排序，列出每一桌的團員名字。若團員註記為素食，名字後方會自動帶上紅色的 **「（素）」** 標誌，方便餐廳上菜與領隊核對人數。</p>
+            <p><strong>「桌次分頁」</strong> 以桌號排序，列出每一桌的團員名字。若團員註記為素食，名字後方會自動帶上紅色的<strong>「（素）」</strong>標誌，方便餐廳上菜與領隊核對人數。</p>
           </div>
         </div>
       </div>
@@ -611,25 +615,52 @@ https://liff.line.me/2010211676-aN5CpjP8
         <div class="scenario-card">
           <div class="scenario-tag">狀況一</div>
           <h4>學生因個人因素臨時更換房間</h4>
-          <p><strong>領隊處理方式</strong>：<br>直接用手機瀏覽器或電腦開啟雲端 Google Sheets 的 `people` 工作表，搜尋該名學生姓名，並修改其 `roomGroup` (房間編組) 與 `firstDayRoomNo` / `secondDayRoomNo` (房號)。修改完成後，請學生再次打開 LINE 點選「我的資訊」，即會一秒顯示新房間與新室友！</p>
+          <p><strong>領隊處理方式：</strong></p>
+          <ol style="margin:8px 0 0 18px;padding:0;color:var(--slate-700);font-size:0.9rem;line-height:1.8;">
+            <li>手機或電腦開啟雲端 Google Sheets 的 <code>people</code> 工作表</li>
+            <li>搜尋該名學生姓名</li>
+            <li>修改 <code>roomGroup</code>（房間編組）與 <code>firstDayRoomNo</code> / <code>secondDayRoomNo</code>（房號）</li>
+            <li>學生在 LINE 點選「我的資訊」，即會即時展示新房間與室友！</li>
+          </ol>
         </div>
 
         <div class="scenario-card">
           <div class="scenario-tag">狀況二</div>
           <h4>團員反映「老師，我被綁錯了」</h4>
-          <p><strong>領隊處理方式</strong>：<br>1. 可指導該師生直接點進系統的「我的資訊」分頁，拉到最底點選「解除綁定」。<br>2. 或者，領隊也可以在雲端 Sheets 的 `people` 中搜尋其姓名，把該列的 `LINE使用者ID` 與 `綁定時間` 刪除（留白），即可完成強制解除綁定，讓團員重做驗證。</p>
+          <p><strong>領隊處理方式：</strong></p>
+          <ol style="margin:8px 0 0 18px;padding:0;color:var(--slate-700);font-size:0.9rem;line-height:1.8;">
+            <li><strong>方法 A（師生自行）：</strong> 指導師生進入系統「我的資訊」分頁 → 拉到最底 → 點選「解除綁定」</li>
+            <li><strong>方法 B（領隊強制）：</strong> 在 Sheets <code>people</code> 搜尋姓名，將「 LINE使用者ID」與「綁定時間」欄位清除（留空）</li>
+            <li>團員即可重新驗證綁定</li>
+          </ol>
         </div>
 
         <div class="scenario-card">
           <div class="scenario-tag">狀況三</div>
           <h4>飯店臨時通知某幾間房號更動</h4>
-          <p><strong>領隊處理方式</strong>：<br>在 Sheets 的 `people` 找到相對應的房間編組（例如男1），將受影響學生的房號格直接改掉。不影響其他未更動的人，資訊為實時動態載入。</p>
+          <p><strong>領隊處理方式：</strong></p>
+          <ol style="margin:8px 0 0 18px;padding:0;color:var(--slate-700);font-size:0.9rem;line-height:1.8;">
+            <li>開啟 Sheets <code>people</code> 工作表</li>
+            <li>找到對應房間編組（例如男1）</li>
+            <li>將受影響學生的房號格直接改掉</li>
+            <li>不影響其他未更動的人，資訊為實時動態載入</li>
+          </ol>
         </div>
 
         <div class="scenario-card">
           <div class="scenario-tag">狀況四</div>
           <h4>隨隊老師想看整輛車的素食名單</h4>
-          <p><strong>領隊處理方式</strong>：<br>領隊直接在自己的 LINE 點選「開啟總覽」，進入後點選右上角的搜尋放大鏡，輸入例如 **「素」** 或 **「桌次」**，就可以直接將手機拿給隨車老師看一秒篩選後的名單，快速又專業！</p>
+          <p><strong>領隊處理方式：</strong></p>
+          <ol style="margin:8px 0 0 18px;padding:0;color:var(--slate-700);font-size:0.9rem;line-height:1.8;">
+            <li>領隊在自己的 LINE 點選「開啟總覽」進入後台</li>
+            <li>點選右上角搜尋放大鏡</li>
+            <li>輸入「素」或「素食」關鍵字</li>
+            <li>將手機拿給隨車老師，一秒看到筛選後名單！</li>
+          </ol>
+          <a href="https://liff.line.me/2010211676-aN5CpjP8?admin=1" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:var(--indigo-600);color:white;font-weight:600;font-size:0.85rem;padding:8px 14px;border-radius:8px;text-decoration:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            開啟後台總覽
+          </a>
         </div>
 
       </div>
