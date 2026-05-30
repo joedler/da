@@ -251,6 +251,7 @@ function handleLineWebhook_(body: ApiPayload): void {
           buttonLabel: "開啟總覽",
           uri: buildLiffUrl_("overview"),
           accentColor: "#2A7DE1",
+          tagText: "ADM",
         }));
       } else {
         replyText_(event.replyToken, "此功能限領隊或管理者使用。若你是工作人員，請開啟領隊總覽並完成首次授權。");
@@ -266,6 +267,7 @@ function handleLineWebhook_(body: ApiPayload): void {
         buttonLabel: "開啟行程表",
         uri: buildLiffUrl_("itinerary"),
         accentColor: "#FF7A59",
+        tagText: "TRIP",
       }));
       return;
     }
@@ -278,6 +280,7 @@ function handleLineWebhook_(body: ApiPayload): void {
         buttonLabel: "開啟聯絡資訊",
         uri: buildLiffUrl_("contacts"),
         accentColor: "#FF8A00",
+        tagText: "TEL",
       }));
       return;
     }
@@ -320,6 +323,7 @@ function buildLinkFlex_(options: {
   buttonLabel: string;
   uri: string;
   accentColor: string;
+  tagText: string;
 }): Record<string, unknown> {
   return {
     type: "bubble",
@@ -327,20 +331,79 @@ function buildLinkFlex_(options: {
     header: {
       type: "box",
       layout: "vertical",
-      paddingAll: "20px",
+      paddingAll: "0px",
+      height: "4px",
       backgroundColor: options.accentColor,
-      contents: [
-        { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
-        { type: "text", text: options.title, color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
-        { type: "text", text: options.subtitle, color: "#ffffffcc", size: "sm", wrap: true, margin: "sm" },
-      ],
+      contents: [{ type: "filler" }],
     },
     body: {
       type: "box",
       layout: "vertical",
       paddingAll: "20px",
       contents: [
-        { type: "text", text: options.body, color: "#334155", size: "sm", wrap: true },
+        {
+          type: "box",
+          layout: "horizontal",
+          alignItems: "center",
+          contents: [
+            {
+              type: "box",
+              layout: "vertical",
+              backgroundColor: "#111111",
+              cornerRadius: "md",
+              width: "48px",
+              height: "22px",
+              paddingTop: "2px",
+              contents: [
+                {
+                  type: "text",
+                  text: options.tagText,
+                  color: "#FFAA3D",
+                  size: "xxs",
+                  weight: "bold",
+                  align: "center",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: "團旅小幫手",
+              color: "#888893",
+              size: "xs",
+              weight: "bold",
+              margin: "md",
+            },
+          ],
+        },
+        {
+          type: "text",
+          text: options.title,
+          color: "#111111",
+          size: "xxl",
+          weight: "bold",
+          margin: "lg",
+        },
+        {
+          type: "text",
+          text: options.subtitle,
+          color: "#888893",
+          size: "sm",
+          wrap: true,
+          margin: "xs",
+        },
+        {
+          type: "separator",
+          color: "#EAE6DF",
+          margin: "md",
+        },
+        {
+          type: "text",
+          text: options.body,
+          color: "#4D4D4D",
+          size: "sm",
+          wrap: true,
+          margin: "md",
+        },
       ],
     },
     footer: {
@@ -349,9 +412,15 @@ function buildLinkFlex_(options: {
       paddingAll: "16px",
       contents: [
         {
+          type: "separator",
+          color: "#EAE6DF",
+          margin: "none",
+        },
+        {
           type: "button",
           style: "primary",
           color: options.accentColor,
+          margin: "md",
           action: {
             type: "uri",
             label: options.buttonLabel,
@@ -359,6 +428,10 @@ function buildLinkFlex_(options: {
           },
         },
       ],
+    },
+    styles: {
+      body: { backgroundColor: "#FDFDF9" },
+      footer: { backgroundColor: "#FDFDF9" },
     },
   };
 }
@@ -371,16 +444,10 @@ function buildWelcomeFlex_(): Record<string, unknown> {
     header: {
       type: "box",
       layout: "vertical",
-      paddingTop: "24px",
-      paddingBottom: "20px",
-      paddingStart: "20px",
-      paddingEnd: "20px",
+      paddingAll: "0px",
+      height: "4px",
       backgroundColor: "#2A7DE1",
-      contents: [
-        { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
-        { type: "text", text: "歡迎使用", color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
-        { type: "text", text: activityName, color: "#ffffffcc", size: "sm", wrap: true, margin: "sm" },
-      ],
+      contents: [{ type: "filler" }],
     },
     body: {
       type: "box",
@@ -388,11 +455,67 @@ function buildWelcomeFlex_(): Record<string, unknown> {
       paddingAll: "20px",
       contents: [
         {
+          type: "box",
+          layout: "horizontal",
+          alignItems: "center",
+          contents: [
+            {
+              type: "box",
+              layout: "vertical",
+              backgroundColor: "#111111",
+              cornerRadius: "md",
+              width: "48px",
+              height: "22px",
+              paddingTop: "2px",
+              contents: [
+                {
+                  type: "text",
+                  text: "VIP",
+                  color: "#FFAA3D",
+                  size: "xxs",
+                  weight: "bold",
+                  align: "center",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: "團旅小幫手",
+              color: "#888893",
+              size: "xs",
+              weight: "bold",
+              margin: "md",
+            },
+          ],
+        },
+        {
           type: "text",
-          text: "請先完成首次驗證與綁定。學生使用姓名與學號；老師使用姓名與手機末三碼。",
-          color: "#334155",
+          text: "歡迎使用",
+          color: "#111111",
+          size: "xxl",
+          weight: "bold",
+          margin: "lg",
+        },
+        {
+          type: "text",
+          text: activityName,
+          color: "#888893",
           size: "sm",
           wrap: true,
+          margin: "xs",
+        },
+        {
+          type: "separator",
+          color: "#EAE6DF",
+          margin: "md",
+        },
+        {
+          type: "text",
+          text: "請先完成首次驗證與綁定。學生使用姓名與學號；老師使用姓名與手機末三碼。",
+          color: "#4D4D4D",
+          size: "sm",
+          wrap: true,
+          margin: "md",
         },
       ],
     },
@@ -403,9 +526,15 @@ function buildWelcomeFlex_(): Record<string, unknown> {
       paddingAll: "16px",
       contents: [
         {
+          type: "separator",
+          color: "#EAE6DF",
+          margin: "none",
+        },
+        {
           type: "button",
           style: "primary",
           color: "#2A7DE1",
+          margin: "md",
           action: {
             type: "uri",
             label: "開始查詢",
@@ -415,6 +544,7 @@ function buildWelcomeFlex_(): Record<string, unknown> {
         {
           type: "button",
           style: "secondary",
+          margin: "xs",
           action: {
             type: "uri",
             label: "查看行程表",
@@ -422,6 +552,10 @@ function buildWelcomeFlex_(): Record<string, unknown> {
           },
         },
       ],
+    },
+    styles: {
+      body: { backgroundColor: "#FDFDF9" },
+      footer: { backgroundColor: "#FDFDF9" },
     },
   };
 }
@@ -461,8 +595,9 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
     paddingEnd: "16px",
   });
 
-  const sep: Record<string, unknown> = { type: "separator", color: "#E2E8F0" };
+  const sep: Record<string, unknown> = { type: "separator", color: "#EAE6DF" };
   const roleText = p.roleClass || p.type || "旅客";
+  const busLabel = p.bus ? (p.bus.includes("車") ? p.bus : `${p.bus}車`) : "VIP";
 
   return {
     type: "bubble",
@@ -470,45 +605,93 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
     header: {
       type: "box",
       layout: "vertical",
-      contents: [
-        { type: "text", text: "團旅小幫手", color: "#ffffffcc", size: "xs", weight: "bold" },
-        { type: "text", text: p.name, color: "#ffffff", size: "xxl", weight: "bold", margin: "md" },
-        {
-          type: "text",
-          text: [roleText, p.bus].filter(Boolean).join("｜"),
-          color: "#ffffffcc",
-          size: "sm",
-          margin: "sm",
-        },
-      ],
-      paddingTop: "16px",
-      paddingBottom: "12px",
-      paddingStart: "16px",
-      paddingEnd: "16px",
+      paddingAll: "0px",
+      height: "4px",
       backgroundColor: "#2A7DE1",
+      contents: [{ type: "filler" }],
     },
     body: {
       type: "box",
       layout: "vertical",
+      paddingAll: "20px",
       contents: [
-        infoRow("車次", p.bus, { bold: true }),
-        sep,
-        infoRow("領隊", [p.busLeaderName, p.busLeaderPhone].filter(Boolean).join(" "), { wrap: true }),
-        sep,
-        infoRow("桌號", p.tableNo),
-        sep,
-        infoRow("第一天房號", p.firstDayRoomNo || p.roomNo),
-        sep,
-        infoRow("第二天房號", p.secondDayRoomNo || p.roomNo),
-        sep,
-        infoRow("同房人員", p.roomMembers, { wrap: true }),
-        sep,
-        hasVegetarian
-          ? infoRow("素食", p.vegetarian, { valueColor: "#00BFA5", bold: true })
-          : infoRow("素食", "無", { valueColor: "#888893" }),
+        {
+          type: "box",
+          layout: "horizontal",
+          alignItems: "center",
+          contents: [
+            {
+              type: "box",
+              layout: "vertical",
+              backgroundColor: "#111111",
+              cornerRadius: "md",
+              width: "48px",
+              height: "22px",
+              paddingTop: "2px",
+              contents: [
+                {
+                  type: "text",
+                  text: busLabel,
+                  color: "#FFAA3D",
+                  size: "xxs",
+                  weight: "bold",
+                  align: "center",
+                },
+              ],
+            },
+            {
+              type: "text",
+              text: "團旅小幫手",
+              color: "#888893",
+              size: "xs",
+              weight: "bold",
+              margin: "md",
+            },
+          ],
+        },
+        {
+          type: "text",
+          text: p.name,
+          color: "#111111",
+          size: "xxl",
+          weight: "bold",
+          margin: "lg",
+        },
+        {
+          type: "text",
+          text: roleText,
+          color: "#888893",
+          size: "sm",
+          wrap: true,
+          margin: "xs",
+        },
+        {
+          type: "separator",
+          color: "#EAE6DF",
+          margin: "md",
+        },
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            infoRow("車次", p.bus, { bold: true }),
+            sep,
+            infoRow("領隊", [p.busLeaderName, p.busLeaderPhone].filter(Boolean).join(" "), { wrap: true }),
+            sep,
+            infoRow("桌號", p.tableNo),
+            sep,
+            infoRow("第一天房號", p.firstDayRoomNo || p.roomNo),
+            sep,
+            infoRow("第二天房號", p.secondDayRoomNo || p.roomNo),
+            sep,
+            infoRow("同房人員", p.roomMembers, { wrap: true }),
+            sep,
+            hasVegetarian
+              ? infoRow("素食", p.vegetarian, { valueColor: "#00BFA5", bold: true })
+              : infoRow("素食", "無", { valueColor: "#888893" }),
+          ],
+        },
       ],
-      paddingAll: "0px",
-      spacing: "none",
     },
     footer: {
       type: "box",
@@ -528,6 +711,10 @@ function buildProfileFlex_(p: ApiProfile): Record<string, unknown> {
           action: { type: "uri", label: "行程表", uri: buildLiffUrl_("itinerary") },
         },
       ],
+    },
+    styles: {
+      body: { backgroundColor: "#FDFDF9" },
+      footer: { backgroundColor: "#FDFDF9" },
     },
   };
 }
