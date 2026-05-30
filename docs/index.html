@@ -622,6 +622,9 @@
 
           loadCachedData() {
             try {
+              // 0秒同步 View 狀態，防止串行載入期間的 2 秒閃爍跳轉！
+              this.activeView = this.requestedView();
+
               const cached = localStorage.getItem("grad_trip_init_data");
               if (cached) {
                 const data = JSON.parse(cached);
