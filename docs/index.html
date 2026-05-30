@@ -598,10 +598,15 @@
           async init() {
             try {
               this.ensureConfig();
-              await this.loadSettings();
-              await this.loadItinerary();
-              await this.loadAlbums();
-              await this.initLiff();
+              
+              // 效能優化：並行載入無相依性的資料與初始化 LIFF，減少多重 API 串行等待時間
+              await Promise.all([
+                this.loadSettings(),
+                this.loadItinerary(),
+                this.loadAlbums(),
+                this.initLiff(),
+              ]);
+
               if (this.requestedView() === "overview") {
                 await this.initOverview();
                 return;
