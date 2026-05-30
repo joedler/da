@@ -518,6 +518,56 @@
             <p>以時間軸方式呈現每日行程，包含集合時間、住宿地址與注意事項。</p>
           </div>
         </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon" style="background-color: #E6FFFA; color: #00BFA5;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          </div>
+          <div class="feature-card-content">
+            <h4>📸 分享旅行的精彩瞬間</h4>
+            <p>可以直接連到你們班的專屬雲端硬碟，把手機裡拍的美照傳上來，跟全班一起留念喔！</p>
+          </div>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21,15 16,10 5,21"></polyline></svg>
+          </div>
+          <div class="feature-card-content">
+            <h4>🖼️ 看看大家拍了些什麼</h4>
+            <p>想知道別班去哪裡好玩嗎？這裡可以隨時點開各班的相簿。老師和領隊也能直接打開總資料夾喔！</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 畢旅相簿使用指南 -->
+    <section>
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        怎麼分享和看照片呢？
+      </h2>
+      
+      <div class="steps">
+        <div class="step-item">
+          <div class="step-badge"></div>
+          <h3 class="step-title">1. 點開相簿功能</h3>
+          <p class="step-desc">綁定好之後，在畫面上點選「上傳照片」或「班級相簿」分頁。</p>
+        </div>
+        
+        <div class="step-item">
+          <div class="step-badge"></div>
+          <h3 class="step-title">2. 登入 Google 帳號</h3>
+          <p class="step-desc">點下按鈕後會開啟 Google 雲端硬碟，記得先登入你平常用的小號或個人 Google 帳號喔！</p>
+        </div>
+        
+        <div class="step-item">
+          <div class="step-badge"></div>
+          <h3 class="step-title">3. 貼心小撇步：免改檔名！</h3>
+          <p class="step-desc">
+            照片太多懶得一張張改名字？只要在班級資料夾裡點右下角的<strong>「＋」</strong>，新增一個<strong>「寫你名字」</strong>的資料夾（例如：<code>王小明</code>），把照片直接通通丟進去，大家就知道是誰拍的囉！
+          </p>
+        </div>
       </div>
     </section>
 
@@ -570,6 +620,38 @@
           </button>
           <div class="faq-content">
             <p>沒辦法。這個系統是用 LINE 帳號來識別每個人的，開啟連結後只會顯示<strong>你自己</strong>的資訊。如果同學想查，請他用自己的手機和 LINE 帳號完成驗證後，就能看到自己的資料了。</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>Q5. 點「上傳照片」卻看到「尚未設定相簿連結」，是哪裡出錯了？</span>
+            <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>
+          </button>
+          <div class="faq-content">
+            <p>別擔心！這代表後台資料還沒填入你們班的相簿網址。可以溫柔地提醒一下你們班導或隨隊老師，請他們在管理後台補上連結，設定好之後就會馬上顯示囉！</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>Q6. 點了按鈕卻說「需要權限」或上傳卡住怎麼辦？</span>
+            <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>
+          </button>
+          <div class="faq-content">
+            <p>因為相簿是存在 Google 雲端硬碟上，記得先確認手機瀏覽器<strong>已經登入任何一個個人的 Google 帳號</strong>。另外，如果是用 LINE 直接點開，有時候會因為 LINE 內建瀏覽器不相容而卡住，這時只要點網頁右上角的「三個點」，選擇<strong>「在外部瀏覽器開啟」</strong>（像 Safari 或 Chrome）就可以順利上傳囉！</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-trigger" onclick="toggleFaq(this)">
+            <span>Q7. 建議一次最多傳幾張照片？上傳到一半卡住怎麼辦？</span>
+            <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>
+          </button>
+          <div class="faq-content">
+            <p>1. 如果是直接用<strong>網頁版</strong>上傳，因為手機容易自動休眠，建議<strong>一次選 5 到 10 張</strong>最保險。<br>
+               2. 如果你的手機有安裝 <strong>Google 雲端硬碟 App</strong>，那一次傳個 20、30 張讓它在背景跑都沒問題喔！<br>
+               3. 真的卡住的話，重新整理一下網頁，改用「少張數、分批」的方式上傳就 OK 了！</p>
           </div>
         </div>
 
