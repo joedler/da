@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>畢旅查詢系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="./config.js"></script>
   </head>
@@ -289,34 +289,42 @@
             <p class="mt-1 text-sm text-slate-600" x-text="profile.roleClass || profile.type || '已綁定使用者'"></p>
           </div>
 
-          <div class="grid grid-cols-3 gap-2 rounded-md bg-slate-100 p-1">
-            <button
-              type="button"
-              class="rounded px-2 py-2 text-sm font-semibold"
+          <div
+            class="flex flex-wrap gap-1 rounded-md bg-slate-100 p-1"
+            role="tablist"
+            aria-label="功能選單"
+          >
+            <button type="button" role="tab"
+              class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
               :class="activeView === 'info' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
-              @click="setView('info')"
-            >
-              我的資訊
-            </button>
-            <button
-              type="button"
-              class="rounded px-2 py-2 text-sm font-semibold"
+              :aria-selected="activeView === 'info'"
+              @click="setView('info')">我的資訊</button>
+            <button type="button" role="tab"
+              class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
               :class="activeView === 'itinerary' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
-              @click="setView('itinerary')"
-            >
-              行程表
-            </button>
-            <button
-              type="button"
-              class="rounded px-2 py-2 text-sm font-semibold"
+              :aria-selected="activeView === 'itinerary'"
+              @click="setView('itinerary')">行程表</button>
+            <button type="button" role="tab"
+              class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
               :class="activeView === 'contacts' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
-              @click="setView('contacts')"
-            >
-              聯絡資訊
-            </button>
+              :aria-selected="activeView === 'contacts'"
+              @click="setView('contacts')">聯絡資訊</button>
+            <button type="button" role="tab"
+              class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
+              :class="activeView === 'photo' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
+              :aria-selected="activeView === 'photo'"
+              @click="setView('photo')">
+              <span aria-hidden="true">📸</span> 上傳照片</button>
+            <button type="button" role="tab"
+              class="flex-1 min-w-[30%] rounded px-2 py-2 text-sm font-semibold whitespace-nowrap"
+              :class="activeView === 'album' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-600'"
+              :aria-selected="activeView === 'album'"
+              @click="setView('album')">
+              <span aria-hidden="true">🖼️</span> 班級相簿</button>
           </div>
 
           <div class="grid grid-cols-2 gap-3" x-show="activeView === 'info'">
+
             <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <p class="text-sm text-slate-500">我的車次</p>
               <p class="mt-1 text-xl font-bold" x-text="profile.bus || '尚未公告'"></p>
@@ -420,6 +428,114 @@
             </template>
           </div>
 
+          <!-- ══ 上傳照片 view=photo ══ -->
+          <div
+            class="space-y-4"
+            x-show="activeView === 'photo'"
+          >
+            <div class="rounded-lg border border-teal-200 bg-teal-50 p-4 shadow-sm">
+              <p class="text-sm text-teal-600">上傳旅遊照片</p>
+              <h3 class="mt-1 text-xl font-bold text-teal-900"
+                  x-text="(profile.roleClass || '') + ' 相簿'"></h3>
+              <p class="mt-2 text-sm leading-6 text-teal-800">
+                照片上傳後，全班同學及老師都可以看到。
+              </p>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+              <div>
+                <p class="text-xs text-slate-400 uppercase tracking-wide">上傳者</p>
+                <p class="mt-1 font-bold" x-text="profile.name"></p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-400 uppercase tracking-wide">班級</p>
+                <p class="mt-1 font-bold" x-text="profile.roleClass || profile.type"></p>
+              </div>
+            </div>
+
+            <!-- 有連結：顯示上傳按鈕 -->
+            <template x-if="classAlbumUrl">
+              <div class="space-y-3">
+                <a
+                  class="block w-full rounded-md bg-teal-700 px-4 py-4 text-center font-bold text-white text-lg shadow"
+                  :href="classAlbumUrl"
+                  target="_blank"
+                >
+                  📸 開啟 Google Drive 上傳照片
+                </a>
+                <div class="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs leading-6 text-amber-800">
+                  <p>📌 上傳前請注意：</p>
+                  <p>・需登入 Google 帳號（個人帳號即可）</p>
+                  <p>・建議照片命名：<strong>姓名_地點</strong>，例如 王小明_墾丁大街</p>
+                  <p>・請勿上傳與旅遊無關的檔案</p>
+                </div>
+              </div>
+            </template>
+
+            <!-- 無連結：提示 -->
+            <template x-if="!classAlbumUrl">
+              <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 text-center">
+                尚未設定相簿連結，請洽老師。
+              </div>
+            </template>
+          </div>
+
+          <!-- ══ 班級相簿 view=album ══ -->
+          <div
+            class="space-y-3"
+            x-show="activeView === 'album'"
+          >
+            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-sm text-slate-500">班級相簿總覽</p>
+              <h3 class="mt-1 text-xl font-bold">選擇班級查看照片</h3>
+              <p class="mt-1 text-sm text-slate-500">需登入 Google 帳號</p>
+            </div>
+
+            <!-- #1：區分「載入中」vs「真的沒資料」 -->
+            <template x-if="!albumsLoaded">
+              <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 text-center">
+                <span class="animate-pulse">載入相簿資料中…</span>
+              </div>
+            </template>
+            <template x-if="albumsLoaded && albums.length === 0">
+              <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 text-center">
+                尚未設定班級相簿，請洽老師。
+              </div>
+            </template>
+
+            <template x-for="album in albums.filter(a => a.cls !== '總資料夾')" :key="album.cls">
+              <a
+                class="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm active:bg-slate-50"
+                :href="album.url"
+                target="_blank"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">📁</span>
+                  <span class="font-semibold" x-text="album.cls"></span>
+                </div>
+                <span class="text-sm font-semibold text-teal-700">開啟 →</span>
+              </a>
+            </template>
+
+            <!-- 總資料夾（老師/領隊用）— 用 masterAlbumUrl 快取，不重複 find()（#7）-->
+            <template x-if="masterAlbumUrl">
+              <a
+                class="flex items-center justify-between rounded-lg border border-teal-300 bg-teal-50 p-4 shadow-sm"
+                :href="masterAlbumUrl"
+                target="_blank"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl">🗂️</span>
+                  <div>
+                    <p class="font-bold text-teal-900">總資料夾</p>
+                    <p class="text-xs text-teal-700">老師 / 領隊專用</p>
+                  </div>
+                </div>
+                <span class="text-sm font-semibold text-teal-700">開啟 →</span>
+              </a>
+            </template>
+          </div>
+
           <button
             type="button"
             class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700"
@@ -448,6 +564,10 @@
           profile: null,
           itinerary: [],
           overview: null,
+          albums: [],
+          albumsLoaded: false,
+          masterAlbumUrl: "",
+          classAlbumUrl: "",
           admin: null,
           activeView: "info",
           overviewTab: "bus",
@@ -480,6 +600,7 @@
               this.ensureConfig();
               await this.loadSettings();
               await this.loadItinerary();
+              await this.loadAlbums();
               await this.initLiff();
               if (this.requestedView() === "overview") {
                 await this.initOverview();
@@ -537,6 +658,8 @@
               this.profile = result.profile;
               this.state = "bound";
               this.message = "";
+              // 設定該使用者對應的班級相簿連結
+              this.classAlbumUrl = this.resolveAlbumUrl(result.profile);
               this.setView(this.requestedView());
               return;
             }
@@ -646,6 +769,8 @@
               this.profile = result.profile;
               this.state = "bound";
               this.message = "";
+              // #3：首次綁定也要設定相簿連結（不走 loadMe，需在此補設）
+              this.classAlbumUrl = this.resolveAlbumUrl(result.profile);
             } catch (error) {
               this.message = error.message || "驗證失敗，請稍後再試。";
             } finally {
@@ -672,6 +797,41 @@
             } finally {
               this.submitting = false;
             }
+          },
+
+          async loadAlbums() {
+            // 失敗不中斷主流程，但記錄錯誤（#4/#6）
+            try {
+              const result = await this.callApi({ action: "albums" });
+              if (result.ok && Array.isArray(result.albums)) {
+                this.albums = result.albums;
+                // 快取總資料夾連結，避免重複 find()（#7）
+                const master = result.albums.find(a => a.cls === "總資料夾");
+                this.masterAlbumUrl = master ? master.url : "";
+              }
+            } catch (err) {
+              console.warn("[loadAlbums] 無法載入相簿連結：", err);
+            } finally {
+              // 無論成功或失敗都標記已完成，讓 UI 正確顯示（#1）
+              this.albumsLoaded = true;
+            }
+          },
+
+          resolveAlbumUrl(profile) {
+            if (!profile) return "";
+            // #5：依試算表「類別」欄判斷，"老師" 為唯一值，"學生" 另處理
+            // GAS 回傳的 profile.type 對應試算表「類別」欄
+            const isTeacher = profile.type === "老師";
+            if (isTeacher) {
+              // 老師回傳總資料夾（用已快取的 masterAlbumUrl）（#7）
+              return this.masterAlbumUrl || "";
+            }
+            // 學生：profile.roleClass 對應試算表「班級或職稱」欄（13個班級名稱）
+            const cls = profile.roleClass || "";
+            const match = this.albums.find(
+              a => a.cls !== "總資料夾" && (cls === a.cls || cls.includes(a.cls) || a.cls.includes(cls))
+            );
+            return match ? match.url : "";
           },
 
           async callApi(params) {
@@ -740,11 +900,11 @@
 
           requestedView() {
             const view = new URLSearchParams(window.location.search).get("view") || window.location.hash.replace("#", "");
-            return ["info", "itinerary", "contacts", "overview"].includes(view) ? view : "info";
+            return ["info", "itinerary", "contacts", "overview", "photo", "album"].includes(view) ? view : "info";
           },
 
           setView(view) {
-            this.activeView = ["info", "itinerary", "contacts"].includes(view) ? view : "info";
+            this.activeView = ["info", "itinerary", "contacts", "photo", "album"].includes(view) ? view : "info";
             const url = new URL(window.location.href);
             url.searchParams.set("view", this.activeView);
             window.history.replaceState({}, "", url.toString());

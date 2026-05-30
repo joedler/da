@@ -558,6 +558,18 @@ https://liff.line.me/2010211676-aN5CpjP8
             <p><strong>「桌次分頁」</strong> 以桌號排序，列出每一桌的團員名字。若團員註記為素食，名字後方會自動帶上紅色的<strong>「（素）」</strong>標誌，方便餐廳上菜與領隊核對人數。</p>
           </div>
         </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <div class="feature-content">
+            <h4>📸 上傳照片 ／ 🖼️ 班級相簿</h4>
+            <p>師生端 LINE 系統新增兩個功能分頁：<br>
+            <strong>「上傳照片」</strong>—— 依照師生所屬班級，自動顯示對應的 Google Drive 相簿連結，點擊即可上傳旅遊照片。老師會自動導向總資料夾。<br>
+            <strong>「班級相簿」</strong>—— 列出全部班級相簿連結，任何人皆可選擇班級瀏覽。總資料夾連結僅顯示於此頁最下方，供領隊／老師使用。<br>
+            相簿連結由領隊或旅行社在 <span style="font-family:monospace;background:#f1f5f9;padding:1px 5px;border-radius:3px;">albums</span> 工作表維護，無需改程式碼。</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -598,6 +610,11 @@ https://liff.line.me/2010211676-aN5CpjP8
               <td><span class="sheet-badge">itinerary</span></td>
               <td>地點、集合時間</td>
               <td>如果天候或其他因素導致行程調整，在此處修改時間或地點，師生 LINE 中的行程表即可同步更新。</td>
+            </tr>
+            <tr>
+              <td><span class="sheet-badge">albums</span></td>
+              <td class="cell-highlight">A欄：班級名稱<br>B欄：Google Drive 連結</td>
+              <td>第 1 列為標題列，第 2 列起填入各班資料。<br>其中一列的班級欄填 <strong>「總資料夾」</strong>，連結填全團照片主資料夾，老師端會自動導向此資料夾。<br><strong>※ 班級名稱須與 people 工作表的「班級或職稱」欄完全一致。</strong></td>
             </tr>
           </tbody>
         </table>
