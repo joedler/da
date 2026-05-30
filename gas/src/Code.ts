@@ -924,7 +924,15 @@ function getMyInfo_(lineUserId: string): ApiResponse {
   require_(normalizedLineUserId, "LINE 使用者 ID 必填");
 
   const table = readTable_(getPeopleSheet_());
-  const person = table.rows.find((row) => read_(row, table.header, "LINE使用者ID") === normalizedLineUserId);
+  
+  // 記憶體索引優化：將線性掃描改為 O(1) 哈希快速字典查詢
+  const lineUserIndex: Record<string, SheetRow> = {};
+  table.rows.forEach((row) => {
+    const uid = read_(row, table.header, "LINE使用者ID");
+    if (uid) lineUserIndex[uid] = row;
+  });
+
+  const person = lineUserIndex[normalizedLineUserId];
 
   if (!person) {
     return { ok: false, error: "NOT_BOUND", message: "尚未完成首次驗證與綁定。" };
@@ -1152,7 +1160,15 @@ function getAuthorizedAdmin_(lineUserId: string): AdminUser | null {
   if (!sheet) return null;
 
   const table = readSimpleTable_(sheet);
-  const row = table.rows.find((item) => readOptional_(item, table.header, "LINE使用者ID") === normalizedLineUserId);
+  
+  // 記憶體索引優化：對 admins 建立 O(1) 哈希字典查詢
+  const adminIndex: Record<string, SheetRow> = {};
+  table.rows.forEach((row) => {
+    const uid = readOptional_(row, table.header, "LINE使用者ID");
+    if (uid) adminIndex[uid] = row;
+  });
+
+  const row = adminIndex[normalizedLineUserId];
   if (!row) return null;
 
   const admin = buildAdmin_(row, table.header);
@@ -1211,29 +1227,10 @@ function getRoomAssignment_(roomGroup: string): {
   };
   if (!roomGroup) return empty;
 
-  const spreadsheet = SpreadsheetApp.openById(getRequiredProperty_("SPREADSHEET_ID"));
-  const sheetName = getProperty_("ROOM_ASSIGNMENTS_SHEET", CONFIG.DEFAULT_ROOM_ASSIGNMENTS_SHEET);
-  const sheet = spreadsheet.getSheetByName(sheetName);
-  if (!sheet) return empty;
-
-  const values = sheet.getDataRange().getValues();
-  if (values.length < 2) return empty;
-
-  const headerRow = values[0].map(normalize_);
-  const header: HeaderMap = {};
-  headerRow.forEach((name, index) => {
-    if (name) header[name] = index;
-  });
-
-  const row = values.slice(1).find((item) => readOptional_(item, header, "房間編組") === roomGroup);
-  if (!row) return empty;
-
-  return {
-    firstDayHotel: readOptional_(row, header, "第一天飯店"),
-    firstDayRoomNo: readOptional_(row, header, "第一天房號"),
-    secondDayHotel: readOptional_(row, header, "第二天飯店"),
-    secondDayRoomNo: readOptional_(row, header, "第二天房號"),
-  };
+  // 性能調優：改用已優化之 getRoomAssignmentMap_() 一鍵加載整張 Sheet 為雜湊 Map，達到 O(1) 極速查詢
+  // 這能避免在 buildProfile_ 中每次都用 SpreadsheetApp.openById 去重複開啟並讀取 Google Sheet 物理實體！
+  const map = getRoomAssignmentMap_();
+  return map[roomGroup] || empty;
 }
 
 function getRoomAssignmentMap_(): Record<string, {
