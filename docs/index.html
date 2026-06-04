@@ -961,7 +961,9 @@
           },
 
           requestedView() {
-            const view = new URLSearchParams(window.location.search).get("view") || window.location.hash.replace("#", "");
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("admin") === "1") return "overview";
+            const view = params.get("view") || window.location.hash.replace("#", "");
             return ["info", "itinerary", "contacts", "overview", "photo", "album"].includes(view) ? view : "info";
           },
 
